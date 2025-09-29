@@ -1,0 +1,110 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  profileName String?  @map("profile_name")
+  avatarUrl   String?  @map("avatar_url")
+
+  // Relations
+  catches   Catch[]
+  locations FavoriteLocation[]
+
+  @@map("users")
+}
+
+model Species {
+  id           String @id @default(cuid())
+  nameSwedish  String @map("name_swedish")
+  nameLatin    String @map("name_latin")
+  nameEnglish  String @map("name_english")
+  category     String // freshwater/saltwater
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  // Relations
+  catches Catch[]
+
+  @@map("species")
+}
+
+model Catch {
+  id           String    @id @default(cuid())
+  userId       String    @map("user_id")
+  speciesId    String    @map("species_id")
+  weight       Decimal?  @db.Decimal(5, 2) // kg
+  length       Decimal?  @db.Decimal(4, 1) // cm
+  latitude     Decimal   @db.Decimal(10, 8)
+  longitude    Decimal   @db.Decimal(11, 8)
+  locationName String?   @map("location_name")
+  caughtAt     DateTime  @map("caught_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  notes        String?
+  weatherId    String?   @map("weather_id")
+
+  // Relations
+  user    User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  species Species      @relation(fields: [speciesId], references: [id])
+  weather WeatherData? @relation(fields: [weatherId], references: [id])
+  photos  Photo[]
+
+  @@map("catches")
+}
+
+model WeatherData {
+  id            String   @id @default(cuid())
+  temperature   Decimal  @db.Decimal(4, 1) // Celsius
+  pressure      Decimal  @db.Decimal(6, 2) // hPa
+  windSpeed     Decimal  @db.Decimal(4, 1) // m/s
+  windDirection Int      // degrees
+  humidity      Int      // percent
+  weatherDesc   String   @map("weather_desc") // clear, cloudy, rain etc
+  recordedAt    DateTime @map("recorded_at")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  // Relations
+  catches Catch[]
+
+  @@map("weather_data")
+}
+
+model Photo {
+  id        String   @id @default(cuid())
+  catchId   String   @map("catch_id")
+  filePath  String   @map("file_path")
+  fileSize  Int      @map("file_size")
+  mimeType  String   @map("mime_type")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  catch Catch @relation(fields: [catchId], references: [id], onDelete: Cascade)
+
+  @@map("photos")
+}
+
+model FavoriteLocation {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  name        String
+  latitude    Decimal  @db.Decimal(10, 8)
+  longitude   Decimal  @db.Decimal(11, 8)
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("favorite_locations")
+}

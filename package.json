@@ -1,0 +1,26 @@
+{
+  "name": "fishlog-project",
+  "version": "1.0.0",
+  "description": "Personal fishing catch tracker with web and mobile apps",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:web": "cd packages/web && npm run dev",
+    "dev:mobile": "cd packages/mobile && npx expo start",
+    "build:web": "cd packages/web && npm run build",
+    "build:mobile": "cd packages/mobile && npx expo build",
+    "db:generate": "cd packages/database && npx prisma generate",
+    "db:migrate": "cd packages/database && npx prisma migrate dev",
+    "db:studio": "cd packages/database && npx prisma studio",
+    "install:all": "npm install && cd packages/web && npm install && cd ../mobile && npm install && cd ../database && npm install"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
