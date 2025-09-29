@@ -1,12 +1,25 @@
 {
-  "name": "database",
+  "name": "@fishlog/database",
   "version": "1.0.0",
-  "description": "",
+  "description": "Database schema and migrations for FishLog",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "generate": "prisma generate",
+    "migrate": "prisma migrate dev",
+    "studio": "prisma studio",
+    "seed": "ts-node seeds/seed.ts",
+    "reset": "prisma migrate reset --force && npm run seed"
   },
-  "keywords": [],
+  "keywords": ["fishlog", "prisma", "database"],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "ts-node": "^10.9.0",
+    "@types/node": "^20.0.0"
+  },
+  "dependencies": {
+    "prisma": "^6.0.0",
+    "@prisma/client": "^6.0.0"
+  }
 }
