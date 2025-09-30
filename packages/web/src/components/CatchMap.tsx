@@ -32,18 +32,19 @@ export default function CatchMap({ catches, apiKey }: CatchMapProps) {
     lng: catches.reduce((sum, c) => sum + c.longitude, 0) / catches.length
   } : { lat: 59.3293, lng: 18.0686 } // Stockholm som default
 
-  const getMarkerColor = (species: string) => {
-    const colors: { [key: string]: string } = {
-      'Gädda': '#10B981', // green
-      'Abborre': '#F59E0B', // yellow
-      'Öring': '#8B5CF6', // purple
-      'Gös': '#3B82F6', // blue
-      'Lax': '#EF4444', // red
-      'Torsk': '#6B7280', // gray
-      'Makrill': '#06B6D4', // cyan
-    }
-    return colors[species] || '#6B7280'
-  }
+  // Marker color function (not used yet but will be for future features)
+  // const getMarkerColor = (species: string) => {
+  //   const colors: { [key: string]: string } = {
+  //     'Gädda': '#10B981', // green
+  //     'Abborre': '#F59E0B', // yellow
+  //     'Öring': '#8B5CF6', // purple
+  //     'Gös': '#3B82F6', // blue
+  //     'Lax': '#EF4444', // red
+  //     'Torsk': '#6B7280', // gray
+  //     'Makrill': '#06B6D4', // cyan
+  //   }
+  //   return colors[species] || '#6B7280'
+  // }
 
   if (!apiKey) {
     return (

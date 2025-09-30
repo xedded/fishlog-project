@@ -29,17 +29,22 @@ export default function Dashboard() {
   const { user, signOut } = useAuth()
   const [catches, setCatches] = useState<Catch[]>([])
   const [loading, setLoading] = useState(true)
-  const [userProfile, setUserProfile] = useState<any>(null)
+  const [userProfile, setUserProfile] = useState<{
+    id: string
+    email: string
+    profile_name: string
+    avatar_url?: string
+  } | null>(null)
 
   useEffect(() => {
     if (user) {
       fetchCatches()
       fetchUserProfile()
     }
-  }, [user])
+  }, [user]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchUserProfile = async () => {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from('users')
       .select('*')
       .eq('id', user?.id)
