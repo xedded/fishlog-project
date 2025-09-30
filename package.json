@@ -7,6 +7,9 @@
     "packages/*"
   ],
   "scripts": {
+    "dev": "cd packages/web && npm run dev",
+    "build": "cd packages/web && npm run build",
+    "start": "cd packages/web && npm run start",
     "dev:web": "cd packages/web && npm run dev",
     "dev:mobile": "cd packages/mobile && npx expo start",
     "build:web": "cd packages/web && npm run build",
