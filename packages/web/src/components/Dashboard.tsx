@@ -173,7 +173,7 @@ export default function Dashboard() {
       alert('Provdata laddad! 🎣')
     } catch (error) {
       console.error('Error loading sample data:', error)
-      alert('Ett fel uppstod: ' + error.message)
+      alert('Ett fel uppstod: ' + (error instanceof Error ? error.message : 'Okänt fel'))
     }
     setLoading(false)
   }
