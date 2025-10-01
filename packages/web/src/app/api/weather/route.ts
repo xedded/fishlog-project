@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+// Using Open-Meteo - Free weather API with historical data support
+// No API key required!
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
   const lat = searchParams.get('lat')
@@ -13,75 +15,111 @@ export async function GET(request: NextRequest) {
     )
   }
 
-  const apiKey = process.env.OPENWEATHERMAP_API_KEY
-
-  if (!apiKey || apiKey === 'your_api_key_here') {
-    return NextResponse.json(
-      { error: 'OpenWeatherMap API key not configured' },
-      { status: 500 }
-    )
-  }
-
   try {
     const catchDate = new Date(timestamp)
     const now = new Date()
-    const fiveDaysAgo = new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000)
 
-    // If catch is within last 5 days, use current weather endpoint
-    // Otherwise, use historical data (requires paid plan) or return null
-    if (catchDate >= fiveDaysAgo) {
-      // Use current weather API
-      const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric&lang=sv`
+    // Format date as YYYY-MM-DD for Open-Meteo API
+    const dateStr = catchDate.toISOString().split('T')[0]
 
-      const response = await fetch(url)
+    // Check if date is in the future (use forecast) or past (use historical/archive)
+    const isFuture = catchDate > now
 
-      if (!response.ok) {
-        throw new Error(`OpenWeatherMap API error: ${response.statusText}`)
-      }
+    let url: string
 
-      const data = await response.json()
-
-      return NextResponse.json({
-        temperature: Math.round(data.main.temp),
-        weather_desc: data.weather[0].description,
-        pressure: data.main.pressure,
-        humidity: data.main.humidity,
-        wind_speed: data.wind.speed,
-        wind_direction: data.wind.deg
-      })
+    if (isFuture) {
+      // Use forecast API (up to 16 days in future)
+      url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,weathercode,pressure_msl,relativehumidity_2m,windspeed_10m,winddirection_10m&timezone=auto&start_date=${dateStr}&end_date=${dateStr}`
     } else {
-      // For historical data (older than 5 days), we need the "History" API which requires a paid plan
-      // As a workaround, we'll use the Time Machine API endpoint
-      const unixTime = Math.floor(catchDate.getTime() / 1000)
-      const url = `https://api.openweathermap.org/data/3.0/onecall/timemachine?lat=${lat}&lon=${lon}&dt=${unixTime}&appid=${apiKey}&units=metric&lang=sv`
+      // For past dates, try historical API first (last 2 years)
+      const twoYearsAgo = new Date(now.getTime() - 2 * 365 * 24 * 60 * 60 * 1000)
 
-      const response = await fetch(url)
-
-      if (!response.ok) {
-        // If historical API fails (likely due to not having paid plan), return null data
-        console.warn('Historical weather data not available')
+      if (catchDate >= twoYearsAgo) {
+        // Use historical API (free, last 2 years)
+        url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${dateStr}&end_date=${dateStr}&hourly=temperature_2m,weathercode,pressure_msl,relativehumidity_2m,windspeed_10m,winddirection_10m&timezone=auto`
+      } else {
+        // Too old for free historical data
         return NextResponse.json({
           temperature: null,
-          weather_desc: 'Väderdata ej tillgänglig för historiska datum',
+          weather_desc: 'Väderdata ej tillgänglig för datum äldre än 2 år',
           pressure: null,
           humidity: null,
           wind_speed: null,
           wind_direction: null
         })
       }
+    }
 
-      const data = await response.json()
-      const weatherData = data.data[0]
+    const response = await fetch(url)
 
-      return NextResponse.json({
-        temperature: Math.round(weatherData.temp),
-        weather_desc: weatherData.weather[0].description,
-        pressure: weatherData.pressure,
-        humidity: weatherData.humidity,
-        wind_speed: weatherData.wind_speed,
-        wind_direction: weatherData.wind_deg
+    if (!response.ok) {
+      throw new Error(`Open-Meteo API error: ${response.statusText}`)
+    }
+
+    const data = await response.json()
+
+    // Find the closest hour to the catch time
+    const hourly = data.hourly
+
+    if (!hourly || !hourly.time || hourly.time.length === 0) {
+      throw new Error('No weather data available for this date')
+    }
+
+    // Find index closest to catch time
+    let closestIndex = 0
+    if (hourly.time.length > 1) {
+      const catchTime = catchDate.getTime()
+      let minDiff = Infinity
+
+      hourly.time.forEach((timeStr: string, index: number) => {
+        const dataTime = new Date(timeStr).getTime()
+        const diff = Math.abs(dataTime - catchTime)
+        if (diff < minDiff) {
+          minDiff = diff
+          closestIndex = index
+        }
       })
     }
+
+    // WMO Weather codes to Swedish descriptions
+    const weatherCodeToDesc = (code: number): string => {
+      const codes: { [key: number]: string } = {
+        0: 'Klar himmel',
+        1: 'Mestadels klart',
+        2: 'Delvis molnigt',
+        3: 'Mulet',
+        45: 'Dimma',
+        48: 'Rimfrost dimma',
+        51: 'Lätt duggregn',
+        53: 'Måttligt duggregn',
+        55: 'Tätt duggregn',
+        61: 'Lätt regn',
+        63: 'Måttligt regn',
+        65: 'Kraftigt regn',
+        71: 'Lätt snöfall',
+        73: 'Måttligt snöfall',
+        75: 'Kraftigt snöfall',
+        77: 'Snökorn',
+        80: 'Lätta regnskurar',
+        81: 'Måttliga regnskurar',
+        82: 'Kraftiga regnskurar',
+        85: 'Lätta snöbyar',
+        86: 'Kraftiga snöbyar',
+        95: 'Åska',
+        96: 'Åska med lätt hagel',
+        99: 'Åska med kraftigt hagel'
+      }
+      return codes[code] || 'Okänt väder'
+    }
+
+    return NextResponse.json({
+      temperature: Math.round(hourly.temperature_2m[closestIndex]),
+      weather_desc: weatherCodeToDesc(hourly.weathercode[closestIndex]),
+      pressure: Math.round(hourly.pressure_msl[closestIndex]),
+      humidity: Math.round(hourly.relativehumidity_2m[closestIndex]),
+      wind_speed: Math.round(hourly.windspeed_10m[closestIndex] * 10) / 10,
+      wind_direction: Math.round(hourly.winddirection_10m[closestIndex])
+    })
   } catch (error) {
     console.error('Weather API error:', error)
     return NextResponse.json(
