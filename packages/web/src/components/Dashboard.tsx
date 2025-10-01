@@ -279,18 +279,9 @@ export default function Dashboard() {
                       </svg>
                     </button>
 
-                    <div className="flex justify-between items-start mb-3 pr-8">
-                      <h3 className="text-lg font-semibold text-gray-900">
-                        {catch_item.species.name_swedish}
-                      </h3>
-                      <span className="text-sm text-gray-500 capitalize">
-                        {catch_item.species.category}
-                      </span>
-                    </div>
-
-                    <p className="text-sm text-gray-600 italic mb-3">
-                      {catch_item.species.name_latin}
-                    </p>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4 pr-8">
+                      {catch_item.species.name_swedish}
+                    </h3>
 
                     <div className="space-y-3 text-sm">
                       <div className="flex justify-between items-center">
@@ -351,10 +342,7 @@ export default function Dashboard() {
                     {catches.map((catch_item) => (
                       <tr key={catch_item.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div>
-                            <div className="text-sm font-medium text-gray-900">{catch_item.species.name_swedish}</div>
-                            <div className="text-sm text-gray-500 italic">{catch_item.species.name_latin}</div>
-                          </div>
+                          <div className="text-sm font-medium text-gray-900">{catch_item.species.name_swedish}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {catch_item.weight ? `${catch_item.weight} kg` : 'Okänd'}

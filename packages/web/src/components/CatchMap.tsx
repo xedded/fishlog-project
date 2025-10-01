@@ -15,6 +15,10 @@ interface CatchData {
     name_swedish: string
     name_latin: string
   }
+  weather_data?: {
+    temperature: number
+    weather_desc: string
+  }
   notes?: string
 }
 
@@ -81,22 +85,23 @@ export default function CatchMap({ catches, apiKey }: CatchMapProps) {
               position={{ lat: selectedCatch.latitude, lng: selectedCatch.longitude }}
               onCloseClick={() => setSelectedCatch(null)}
             >
-              <div className="p-3 max-w-xs bg-white rounded-lg shadow-lg">
-                <h3 className="font-bold text-lg text-gray-900 mb-1">
+              <div className="p-2 max-w-xs bg-white rounded-lg shadow-lg">
+                <h3 className="font-bold text-lg text-gray-900 mb-3">
                   {selectedCatch.species.name_swedish}
                 </h3>
-                <p className="text-sm text-gray-700 italic mb-3">
-                  {selectedCatch.species.name_latin}
-                </p>
 
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-700 font-medium">Vikt:</span>
-                    <span className="font-semibold text-gray-900">{selectedCatch.weight} kg</span>
+                    <span className="font-semibold text-gray-900">
+                      {selectedCatch.weight ? `${selectedCatch.weight} kg` : 'Okänd'}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-700 font-medium">Längd:</span>
-                    <span className="font-semibold text-gray-900">{selectedCatch.length} cm</span>
+                    <span className="font-semibold text-gray-900">
+                      {selectedCatch.length ? `${selectedCatch.length} cm` : 'Okänd'}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-700 font-medium">Plats:</span>
@@ -108,6 +113,14 @@ export default function CatchMap({ catches, apiKey }: CatchMapProps) {
                       {new Date(selectedCatch.caught_at).toLocaleDateString('sv-SE')}
                     </span>
                   </div>
+                  {selectedCatch.weather_data && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-700 font-medium">Väder:</span>
+                      <span className="font-semibold text-green-700">
+                        {selectedCatch.weather_data.temperature}°C, {selectedCatch.weather_data.weather_desc}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {selectedCatch.notes && (
