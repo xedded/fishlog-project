@@ -64,23 +64,49 @@ Personlig fiskfångst-app med webb och mobilgränssnitt för att registrera fån
   - [x] Svensk väderbeskrivning
   - [x] Vindriktning i väderstreck (N, NNÖ, SÖ, etc.)
 - [x] **Kartvisualisering (Google Maps)**
-  - [x] Markers för varje fångst
+  - [x] Custom Fish-ikoner som markers (färgkodade efter kategori)
   - [x] InfoWindow med fångstdetaljer och väderdata
-  - [x] Darkmode-stöd för karta
+  - [x] Darkmode-stöd för karta och InfoWindow
   - [x] Kartbaserad filtrering (zoom/pan uppdaterar listan)
   - [x] Kartväljare i fångstformuläret
+  - [x] Klicka utanför för att stänga InfoWindow
+- [x] **Reverse Geocoding**
+  - [x] Automatisk platsnamn från koordinater (Google Geocoding API)
+  - [x] Prioritering: sjö/naturlig feature → ort → kommun
+  - [x] Fallback till koordinater om API ej aktiverat
+  - [x] Koordinatfält dolda från användare
+- [x] **UX-förbättringar**
+  - [x] Darkmode sparas i localStorage
+  - [x] Darkmode default för hela appen
+  - [x] Expanderbar listvy (dölj på mobil)
+  - [x] Förbättrad felhantering med detaljerade meddelanden
+  - [x] Inloggningssida omdesignad med darkmode
+  - [x] Google-inloggning prioriterad
 
-### Fas 3 - Statistik & Foto ← EJ PÅBÖRJAD
+### Fas 3 - Demodata & Testing ← 100% KLAR ✅
+- [x] **Demodata-generering**
+  - [x] API-route för att generera 10 slumpmässiga fångster
+  - [x] 15 svenska vatten med realistiska koordinater
+  - [x] 8 fiskarter med realistiska viktintervall
+  - [x] Slumpmässiga datum senaste 3 månaderna
+  - [x] Automatisk väderdata-hämtning för varje fångst
+  - [x] Grön "Generera demodata"-knapp i UI
+  - [x] Kan köras flera gånger för mer testdata
+
+### Fas 4 - Statistik & Foto ← EJ PÅBÖRJAD
 - [ ] Foto-upload funktionalitet
 - [ ] Basic statistik och listor
 - [ ] Filtrering på art/datum
 - [ ] Trendgrafer (vikt över tid, fångster per månad)
 
-### Fas 4 - Advanced Features (vecka 7-8)
+### Fas 5 - Advanced Features
 - [ ] Heatmaps och avancerade kartor
 - [ ] Trendgrafer och toplistor
 - [ ] Förbättrad offline-sync
 - [ ] Performance optimering
+- [ ] Månfas-data (bra för fiske!)
+- [ ] Soluppgång/nedgång
+- [ ] Exportera data till CSV/JSON
 
 ## Projektstruktur
 ```
@@ -97,7 +123,7 @@ fishlog-project/
 
 ## Status och nästa steg
 
-### ✅ Fas 1 & 2 - KLART (Foundation + Väder + Karta)
+### ✅ Fas 1, 2 & 3 - KLART (Foundation + Väder + Karta + Demodata)
 
 **Infrastruktur:**
 - Monorepo struktur med workspaces
@@ -136,11 +162,13 @@ fishlog-project/
 
 **Kartfunktioner:**
 - Google Maps (@vis.gl/react-google-maps)
-- Markers för varje fångst
-- InfoWindow popup med full info
-- Darkmode-stöd för kartan
+- Custom Fish-ikoner som markers (färgkodade efter kategori)
+- InfoWindow popup med full info (kompakt design)
+- Darkmode-stöd för kartan och InfoWindow
 - Kartbaserad filtrering (synliga fångster baserat på zoom/pan)
 - Kartväljare i fångstformuläret
+- Klicka utanför för att stänga InfoWindow
+- Reverse geocoding (automatiska platsnamn från koordinater)
 
 **Väderintegration:**
 - Open-Meteo API (gratis, ingen API-nyckel)
@@ -150,36 +178,61 @@ fishlog-project/
 - Svensk väderbeskrivning
 - Vindriktning konverterad till väderstreck (N, NNÖ, NÖ, ÖNÖ, etc.)
 
-**Testdata i databas:**
+**Testdata & Demodata:**
 - 10 svenska fiskarter (Gädda, Abborre, Öring, Lax, Gös, Torsk, Makrill, etc.)
 - 5 favoritplatser (Vänern, Vättern, Mörrum, etc.)
-- 6 realistiska fångster med väderdata
+- Demodata-generator för 10 slumpmässiga fångster
+- 15 svenska vatten med realistiska koordinater
+- Automatisk väderdata för genererade fångster
+- Kan köras flera gånger för mer testdata
 
-### 🚀 Nästa steg - Fas 3 (Statistik & Foto)
+**Google Cloud Setup:**
+- Maps JavaScript API (för kartor och markers)
+- Geocoding API (för reverse geocoding - måste aktiveras manuellt)
+- OAuth 2.0 konfigurerad för Supabase
+
+### 🚀 Nästa steg - Fas 4 (Statistik & Foto)
 
 **Högsta prioritet:**
 1. **Foto-upload:** Supabase Storage integration för fångstbilder
-2. **Custom map markers:** Stilrena markers som matchar appens design
-3. **Filtrering:** Filtrera fångster på art och datumintervall
-4. **Basic statistik:**
+2. **Filtrering:** Filtrera fångster på art och datumintervall
+3. **Basic statistik:**
    - Total antal fångster
    - Största fångst (vikt/längd)
    - Fångster per art (diagram)
    - Favorit fiskeplats
 
 **Medium prioritet:**
-5. **Trendgrafer:**
+4. **Trendgrafer:**
    - Vikt över tid (line chart)
    - Fångster per månad (bar chart)
    - Väderkorrelation (scatter plot)
-6. **Export-funktion:** Exportera fångster till CSV/JSON
-7. **Dela fångst:** Generera delbar länk med bild
+5. **Export-funktion:** Exportera fångster till CSV/JSON
+6. **Dela fångst:** Generera delbar länk med bild
+7. **Månfas-data:** Visa månfas för varje fångst (bra för fiskeprognos)
 
 **Lägre prioritet:**
 8. **Mobile app:** Koppla Expo-app till Supabase
 9. **Offline-funktionalitet:** SQLite + sync för mobil
 10. **Heatmaps:** Värmekartor för fångstplatser
 11. **Push-notiser:** Påminnelser om fiske
+
+## Kända problem och lösningar
+
+### Google Geocoding API "REQUEST_DENIED"
+**Problem:** Geocoding API returnerar REQUEST_DENIED när man försöker hämta platsnamn.
+**Lösning:**
+1. Gå till Google Cloud Console
+2. Aktivera "Geocoding API" i APIs & Services → Library
+3. Appen har fallback till koordinater om API:et inte är aktiverat
+
+### Demodata genererar 0 fångster
+**Problem:** Artnamn i FISH_SPECIES matchar inte exakt med databas-arter.
+**Lösning:** Kontrollera att fiskarter i databasen matchar namnen i generate-demo/route.ts
+
+### Användare får "okänt fel" vid registrering
+**Problem:** Otillräcklig felhantering gjorde det svårt att felsöka.
+**Lösning:** Lagt till omfattande console.error() logging och detaljerade felmeddelanden
 
 ## Deployment Configuration (VIKTIGT!)
 
