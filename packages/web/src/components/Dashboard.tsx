@@ -76,7 +76,6 @@ export default function Dashboard() {
         weather_data (temperature, weather_desc, wind_speed, wind_direction, pressure, humidity)
       `)
       .eq('user_id', user?.id)
-      .order('caught_at', { ascending: false })
 
     if (error) {
       console.error('Error fetching catches:', error)
@@ -85,6 +84,31 @@ export default function Dashboard() {
       setCatches(data || [])
     }
     setLoading(false)
+  }
+
+  const sortCatches = (catches: Catch[]) => {
+    const sorted = [...catches].sort((a, b) => {
+      let comparison = 0
+
+      switch (sortBy) {
+        case 'date':
+          comparison = new Date(a.caught_at).getTime() - new Date(b.caught_at).getTime()
+          break
+        case 'species':
+          comparison = a.species.name_swedish.localeCompare(b.species.name_swedish, 'sv')
+          break
+        case 'weight':
+          comparison = (a.weight || 0) - (b.weight || 0)
+          break
+        case 'length':
+          comparison = (a.length || 0) - (b.length || 0)
+          break
+      }
+
+      return sortOrder === 'asc' ? comparison : -comparison
+    })
+
+    return sorted
   }
 
   const loadSampleData = async () => {
@@ -187,22 +211,31 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow">
+    <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
+      <header className={`${darkMode ? 'bg-gray-800' : 'bg-white'} shadow`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">🎣 FishLog</h1>
-              <p className="text-gray-600">
+              <h1 className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>🎣 FishLog</h1>
+              <p className={darkMode ? 'text-gray-300' : 'text-gray-600'}>
                 Välkommen, {userProfile?.profile_name || user?.user_metadata?.full_name || user?.email}
               </p>
             </div>
-            <button
-              onClick={handleSignOut}
-              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md"
-            >
-              Logga ut
-            </button>
+            <div className="flex gap-3 items-center">
+              <button
+                onClick={() => setDarkMode(!darkMode)}
+                className={`${darkMode ? 'bg-gray-700 text-yellow-400' : 'bg-gray-200 text-gray-700'} hover:opacity-80 px-4 py-2 rounded-md font-medium`}
+                title={darkMode ? 'Ljust läge' : 'Mörkt läge'}
+              >
+                {darkMode ? '☀️' : '🌙'}
+              </button>
+              <button
+                onClick={handleSignOut}
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md"
+              >
+                Logga ut
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -212,7 +245,7 @@ export default function Dashboard() {
           {/* Karta */}
           {catches.length > 0 && (
             <div className="mb-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">
+              <h2 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-4`}>
                 🗺️ Fångstplatser
               </h2>
               <CatchMap
@@ -225,19 +258,41 @@ export default function Dashboard() {
 
           <div className="mb-6">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold text-gray-900">
+              <h2 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
                 📋 Synliga fångster ({visibleCatches.length > 0 ? visibleCatches.length : catches.length})
               </h2>
               <div className="flex gap-2">
+                {/* Sorting controls */}
+                {catches.length > 0 && (
+                  <div className="flex gap-2 items-center">
+                    <select
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value as 'date' | 'species' | 'weight' | 'length')}
+                      className={`px-3 py-2 rounded-md text-sm font-medium ${darkMode ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-900'}`}
+                    >
+                      <option value="date">Datum</option>
+                      <option value="species">Art</option>
+                      <option value="weight">Vikt</option>
+                      <option value="length">Längd</option>
+                    </select>
+                    <button
+                      onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                      className={`px-3 py-2 rounded-md text-sm font-medium ${darkMode ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-900'}`}
+                      title={sortOrder === 'asc' ? 'Stigande' : 'Fallande'}
+                    >
+                      {sortOrder === 'asc' ? '↑' : '↓'}
+                    </button>
+                  </div>
+                )}
                 {/* View toggle */}
                 {catches.length > 0 && (
-                  <div className="flex bg-gray-200 rounded-md p-1">
+                  <div className={`flex ${darkMode ? 'bg-gray-700' : 'bg-gray-200'} rounded-md p-1`}>
                     <button
                       onClick={() => setViewMode('grid')}
                       className={`px-3 py-1 rounded text-sm font-medium ${
                         viewMode === 'grid'
-                          ? 'bg-white text-gray-900 shadow'
-                          : 'text-gray-600 hover:text-gray-900'
+                          ? `${darkMode ? 'bg-gray-600 text-white' : 'bg-white text-gray-900'} shadow`
+                          : `${darkMode ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`
                       }`}
                     >
                       Grid
@@ -246,8 +301,8 @@ export default function Dashboard() {
                       onClick={() => setViewMode('list')}
                       className={`px-3 py-1 rounded text-sm font-medium ${
                         viewMode === 'list'
-                          ? 'bg-white text-gray-900 shadow'
-                          : 'text-gray-600 hover:text-gray-900'
+                          ? `${darkMode ? 'bg-gray-600 text-white' : 'bg-white text-gray-900'} shadow`
+                          : `${darkMode ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`
                       }`}
                     >
                       Lista
@@ -265,8 +320,8 @@ export default function Dashboard() {
 
             {catches.length === 0 ? (
               <div className="text-center py-12">
-                <p className="text-gray-500 text-lg">Inga fångster registrerade än</p>
-                <p className="text-gray-400 mb-4">Börja logga dina fångster!</p>
+                <p className={`${darkMode ? 'text-gray-400' : 'text-gray-500'} text-lg`}>Inga fångster registrerade än</p>
+                <p className={`${darkMode ? 'text-gray-500' : 'text-gray-400'} mb-4`}>Börja logga dina fångster!</p>
                 <button
                   onClick={loadSampleData}
                   className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md"
@@ -276,8 +331,8 @@ export default function Dashboard() {
               </div>
             ) : viewMode === 'grid' ? (
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {(visibleCatches.length > 0 ? visibleCatches : catches).map((catch_item) => (
-                  <div key={catch_item.id} className="bg-white rounded-lg shadow p-6 relative">
+                {sortCatches(visibleCatches.length > 0 ? visibleCatches : catches).map((catch_item) => (
+                  <div key={catch_item.id} className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow p-6 relative`}>
                     <button
                       onClick={() => handleDeleteCatch(catch_item.id)}
                       className="absolute top-2 right-2 text-red-600 hover:text-red-800 p-2"
@@ -288,50 +343,50 @@ export default function Dashboard() {
                       </svg>
                     </button>
 
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4 pr-8">
+                    <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'} mb-4 pr-8`}>
                       {catch_item.species.name_swedish}
                     </h3>
 
                     <div className="space-y-3 text-sm">
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-700 font-medium">Vikt:</span>
-                        <span className="text-gray-900 font-semibold">
+                        <span className={`${darkMode ? 'text-gray-300' : 'text-gray-700'} font-medium`}>Vikt:</span>
+                        <span className={`${darkMode ? 'text-gray-100' : 'text-gray-900'} font-semibold`}>
                           {catch_item.weight ? `${catch_item.weight} kg` : 'Okänd'}
                         </span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-700 font-medium">Längd:</span>
-                        <span className="text-gray-900 font-semibold">
+                        <span className={`${darkMode ? 'text-gray-300' : 'text-gray-700'} font-medium`}>Längd:</span>
+                        <span className={`${darkMode ? 'text-gray-100' : 'text-gray-900'} font-semibold`}>
                           {catch_item.length ? `${catch_item.length} cm` : 'Okänd'}
                         </span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-700 font-medium">Plats:</span>
-                        <span className="text-blue-700 font-semibold text-right max-w-[60%]">{catch_item.location_name}</span>
+                        <span className={`${darkMode ? 'text-gray-300' : 'text-gray-700'} font-medium`}>Plats:</span>
+                        <span className={`${darkMode ? 'text-blue-400' : 'text-blue-700'} font-semibold text-right max-w-[60%]`}>{catch_item.location_name}</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-700 font-medium">Datum:</span>
-                        <span className="text-gray-900 font-semibold">
+                        <span className={`${darkMode ? 'text-gray-300' : 'text-gray-700'} font-medium`}>Datum:</span>
+                        <span className={`${darkMode ? 'text-gray-100' : 'text-gray-900'} font-semibold`}>
                           {new Date(catch_item.caught_at).toLocaleDateString('sv-SE')}
                         </span>
                       </div>
                       {catch_item.weather_data && (
                         <>
                           <div className="flex justify-between items-center">
-                            <span className="text-gray-700 font-medium">Väder:</span>
-                            <span className="text-green-700 font-semibold">
+                            <span className={`${darkMode ? 'text-gray-300' : 'text-gray-700'} font-medium`}>Väder:</span>
+                            <span className={`${darkMode ? 'text-green-400' : 'text-green-700'} font-semibold`}>
                               {catch_item.weather_data.temperature}°C, {catch_item.weather_data.weather_desc}
                             </span>
                           </div>
                           <div className="flex justify-between items-center">
-                            <span className="text-gray-700 font-medium">Vind:</span>
-                            <span className="text-gray-900 font-semibold">
+                            <span className={`${darkMode ? 'text-gray-300' : 'text-gray-700'} font-medium`}>Vind:</span>
+                            <span className={`${darkMode ? 'text-gray-100' : 'text-gray-900'} font-semibold`}>
                               {catch_item.weather_data.wind_speed} m/s, {catch_item.weather_data.wind_direction}°
                             </span>
                           </div>
                           <div className="flex justify-between items-center">
-                            <span className="text-gray-700 font-medium">Lufttryck:</span>
-                            <span className="text-gray-900 font-semibold">
+                            <span className={`${darkMode ? 'text-gray-300' : 'text-gray-700'} font-medium`}>Lufttryck:</span>
+                            <span className={`${darkMode ? 'text-gray-100' : 'text-gray-900'} font-semibold`}>
                               {catch_item.weather_data.pressure} hPa
                             </span>
                           </div>
@@ -340,44 +395,44 @@ export default function Dashboard() {
                     </div>
 
                     {catch_item.notes && (
-                      <div className="mt-4 pt-3 border-t border-gray-200">
-                        <p className="text-sm text-gray-800 italic bg-gray-50 p-2 rounded">{catch_item.notes}</p>
+                      <div className={`mt-4 pt-3 ${darkMode ? 'border-gray-700' : 'border-gray-200'} border-t`}>
+                        <p className={`text-sm ${darkMode ? 'text-gray-300 bg-gray-700' : 'text-gray-800 bg-gray-50'} italic p-2 rounded`}>{catch_item.notes}</p>
                       </div>
                     )}
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="bg-white rounded-lg shadow overflow-hidden">
+              <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow overflow-hidden`}>
                 <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+                  <thead className={darkMode ? 'bg-gray-700' : 'bg-gray-50'}>
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Art</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vikt</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Längd</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Plats</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Datum</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Väder</th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Åtgärder</th>
+                      <th className={`px-6 py-3 text-left text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-500'} uppercase tracking-wider`}>Art</th>
+                      <th className={`px-6 py-3 text-left text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-500'} uppercase tracking-wider`}>Vikt</th>
+                      <th className={`px-6 py-3 text-left text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-500'} uppercase tracking-wider`}>Längd</th>
+                      <th className={`px-6 py-3 text-left text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-500'} uppercase tracking-wider`}>Plats</th>
+                      <th className={`px-6 py-3 text-left text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-500'} uppercase tracking-wider`}>Datum</th>
+                      <th className={`px-6 py-3 text-left text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-500'} uppercase tracking-wider`}>Väder</th>
+                      <th className={`px-6 py-3 text-right text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-500'} uppercase tracking-wider`}>Åtgärder</th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {(visibleCatches.length > 0 ? visibleCatches : catches).map((catch_item) => (
-                      <tr key={catch_item.id} className="hover:bg-gray-50">
+                  <tbody className={`${darkMode ? 'bg-gray-800' : 'bg-white'} divide-y ${darkMode ? 'divide-gray-700' : 'divide-gray-200'}`}>
+                    {sortCatches(visibleCatches.length > 0 ? visibleCatches : catches).map((catch_item) => (
+                      <tr key={catch_item.id} className={darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">{catch_item.species.name_swedish}</div>
+                          <div className={`text-sm font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>{catch_item.species.name_swedish}</div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className={`px-6 py-4 whitespace-nowrap text-sm ${darkMode ? 'text-gray-200' : 'text-gray-900'}`}>
                           {catch_item.weight ? `${catch_item.weight} kg` : 'Okänd'}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className={`px-6 py-4 whitespace-nowrap text-sm ${darkMode ? 'text-gray-200' : 'text-gray-900'}`}>
                           {catch_item.length ? `${catch_item.length} cm` : 'Okänd'}
                         </td>
-                        <td className="px-6 py-4 text-sm text-blue-700 font-medium max-w-xs truncate">{catch_item.location_name}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className={`px-6 py-4 text-sm ${darkMode ? 'text-blue-400' : 'text-blue-700'} font-medium max-w-xs truncate`}>{catch_item.location_name}</td>
+                        <td className={`px-6 py-4 whitespace-nowrap text-sm ${darkMode ? 'text-gray-200' : 'text-gray-900'}`}>
                           {new Date(catch_item.caught_at).toLocaleDateString('sv-SE')}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-green-700">
+                        <td className={`px-6 py-4 whitespace-nowrap text-sm ${darkMode ? 'text-green-400' : 'text-green-700'}`}>
                           {catch_item.weather_data
                             ? `${catch_item.weather_data.temperature}°C`
                             : '-'
