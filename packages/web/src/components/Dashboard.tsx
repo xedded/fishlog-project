@@ -24,7 +24,9 @@ import {
   StickyNote,
   CloudRain,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  ArrowUp,
+  ArrowDown
 } from 'lucide-react'
 
 interface Catch {
@@ -84,6 +86,22 @@ export default function Dashboard() {
       newExpanded.add(id)
     }
     setExpandedRows(newExpanded)
+  }
+
+  const handleColumnSort = (column: 'date' | 'species' | 'weight' | 'length') => {
+    if (sortBy === column) {
+      // Toggle sort order if clicking the same column
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
+    } else {
+      // Set new column and default to descending
+      setSortBy(column)
+      setSortOrder('desc')
+    }
+  }
+
+  const SortIcon = ({ column }: { column: 'date' | 'species' | 'weight' | 'length' }) => {
+    if (sortBy !== column) return <ArrowUpDown className="w-3 h-3 opacity-40" />
+    return sortOrder === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
   }
 
   useEffect(() => {
@@ -315,28 +333,6 @@ export default function Dashboard() {
                 </h2>
               </div>
               <div className="flex flex-wrap gap-2">
-                {/* Sorting controls */}
-                {catches.length > 0 && (
-                  <div className="flex gap-2 items-center">
-                    <select
-                      value={sortBy}
-                      onChange={(e) => setSortBy(e.target.value as 'date' | 'species' | 'weight' | 'length')}
-                      className={`px-3 py-2 rounded-lg text-sm border ${darkMode ? 'bg-gray-700 text-white border-gray-600' : 'bg-white text-gray-900 border-gray-300'} focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                    >
-                      <option value="date">Datum</option>
-                      <option value="species">Art</option>
-                      <option value="weight">Vikt</option>
-                      <option value="length">Längd</option>
-                    </select>
-                    <button
-                      onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-                      className={`p-2 rounded-lg border ${darkMode ? 'bg-gray-700 text-white border-gray-600 hover:bg-gray-600' : 'bg-white text-gray-900 border-gray-300 hover:bg-gray-50'} transition-colors`}
-                      title={sortOrder === 'asc' ? 'Stigande' : 'Fallande'}
-                    >
-                      <ArrowUpDown className={`w-4 h-4 ${sortOrder === 'desc' ? 'rotate-180' : ''} transition-transform`} />
-                    </button>
-                  </div>
-                )}
                 {/* View toggle */}
                 {catches.length > 0 && (
                   <div className={`flex ${darkMode ? 'bg-gray-700' : 'bg-gray-200'} rounded-lg p-1`}>
@@ -481,13 +477,45 @@ export default function Dashboard() {
                 <table className="min-w-full">
                   <thead className={darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}>
                     <tr>
-                      <th className={`px-4 py-3.5 text-left text-xs font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-700'} uppercase tracking-wider w-12`}></th>
-                      <th className={`px-4 py-3.5 text-left text-xs font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-700'} uppercase tracking-wider`}>Art</th>
-                      <th className={`px-4 py-3.5 text-left text-xs font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-700'} uppercase tracking-wider`}>Vikt</th>
-                      <th className={`px-4 py-3.5 text-left text-xs font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-700'} uppercase tracking-wider`}>Längd</th>
-                      <th className={`px-4 py-3.5 text-left text-xs font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-700'} uppercase tracking-wider`}>Plats</th>
-                      <th className={`px-4 py-3.5 text-left text-xs font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-700'} uppercase tracking-wider`}>Datum</th>
-                      <th className={`px-4 py-3.5 text-right text-xs font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-700'} uppercase tracking-wider`}>Åtgärder</th>
+                      <th className={`px-3 sm:px-4 py-3.5 text-left text-xs font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-700'} uppercase tracking-wider w-8 sm:w-12`}></th>
+                      <th
+                        className={`px-3 sm:px-4 py-3.5 text-left text-xs font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-700'} uppercase tracking-wider cursor-pointer hover:bg-opacity-80 select-none`}
+                        onClick={() => handleColumnSort('species')}
+                      >
+                        <div className="flex items-center gap-1.5">
+                          <span>Art</span>
+                          <SortIcon column="species" />
+                        </div>
+                      </th>
+                      <th
+                        className={`px-3 sm:px-4 py-3.5 text-left text-xs font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-700'} uppercase tracking-wider cursor-pointer hover:bg-opacity-80 select-none`}
+                        onClick={() => handleColumnSort('weight')}
+                      >
+                        <div className="flex items-center gap-1.5">
+                          <span>Vikt</span>
+                          <SortIcon column="weight" />
+                        </div>
+                      </th>
+                      <th
+                        className={`px-3 sm:px-4 py-3.5 text-left text-xs font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-700'} uppercase tracking-wider cursor-pointer hover:bg-opacity-80 select-none`}
+                        onClick={() => handleColumnSort('length')}
+                      >
+                        <div className="flex items-center gap-1.5">
+                          <span>Längd</span>
+                          <SortIcon column="length" />
+                        </div>
+                      </th>
+                      <th className={`hidden md:table-cell px-4 py-3.5 text-left text-xs font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-700'} uppercase tracking-wider`}>Plats</th>
+                      <th
+                        className={`px-3 sm:px-4 py-3.5 text-left text-xs font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-700'} uppercase tracking-wider cursor-pointer hover:bg-opacity-80 select-none`}
+                        onClick={() => handleColumnSort('date')}
+                      >
+                        <div className="flex items-center gap-1.5">
+                          <span>Datum</span>
+                          <SortIcon column="date" />
+                        </div>
+                      </th>
+                      <th className={`hidden sm:table-cell px-4 py-3.5 text-right text-xs font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-700'} uppercase tracking-wider`}>Åtgärder</th>
                     </tr>
                   </thead>
                   <tbody className={`${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
@@ -497,43 +525,52 @@ export default function Dashboard() {
                         <React.Fragment key={catch_item.id}>
                           <tr className={`${darkMode ? 'hover:bg-gray-700/50 border-gray-700/50' : 'hover:bg-gray-50 border-gray-200'} transition-colors border-b cursor-pointer`}
                               onClick={() => toggleRow(catch_item.id)}>
-                            <td className="px-4 py-4">
+                            <td className="px-3 sm:px-4 py-3 sm:py-4">
                               {isExpanded ? (
                                 <ChevronDown className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
                               ) : (
                                 <ChevronRight className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
                               )}
                             </td>
-                            <td className="px-4 py-4 whitespace-nowrap">
-                              <div className="flex items-center gap-2">
-                                <Fish className={`w-4 h-4 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`} />
-                                <span className={`text-sm font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>{catch_item.species.name_swedish}</span>
+                            <td className="px-3 sm:px-4 py-3 sm:py-4 whitespace-nowrap">
+                              <div className="flex items-center gap-1.5 sm:gap-2">
+                                <Fish className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`} />
+                                <span className={`text-xs sm:text-sm font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>{catch_item.species.name_swedish}</span>
                               </div>
                             </td>
-                            <td className={`px-4 py-4 whitespace-nowrap text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                            <td className={`px-3 sm:px-4 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                               {catch_item.weight ? `${catch_item.weight} kg` : '—'}
                             </td>
-                            <td className={`px-4 py-4 whitespace-nowrap text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                            <td className={`px-3 sm:px-4 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                               {catch_item.length ? `${catch_item.length} cm` : '—'}
                             </td>
-                            <td className={`px-4 py-4 text-sm ${darkMode ? 'text-blue-400' : 'text-blue-600'} font-medium max-w-xs truncate`}>{catch_item.location_name}</td>
-                            <td className={`px-4 py-4 whitespace-nowrap text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                            <td className={`hidden md:table-cell px-4 py-4 text-sm ${darkMode ? 'text-blue-400' : 'text-blue-600'} font-medium max-w-xs truncate`}>{catch_item.location_name}</td>
+                            <td className={`px-3 sm:px-4 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                               {new Date(catch_item.caught_at).toLocaleDateString('sv-SE')}
                             </td>
-                            <td className="px-4 py-4 whitespace-nowrap text-right text-sm" onClick={(e) => e.stopPropagation()}>
+                            <td className="hidden sm:table-cell px-4 py-4 whitespace-nowrap text-right text-sm" onClick={(e) => e.stopPropagation()}>
                               <button
                                 onClick={() => handleDeleteCatch(catch_item.id)}
                                 className="inline-flex items-center gap-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 px-2.5 py-1.5 rounded-lg transition-colors"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
-                                <span className="hidden sm:inline">Radera</span>
+                                <span>Radera</span>
                               </button>
                             </td>
                           </tr>
                           {isExpanded && (
                             <tr className={`${darkMode ? 'bg-gray-750 border-gray-700/50' : 'bg-gray-50 border-gray-200'} border-b`}>
-                              <td colSpan={7} className="px-4 py-4">
-                                <div className="pl-8 pr-4 space-y-3">
+                              <td colSpan={7} className="px-3 sm:px-4 py-3 sm:py-4">
+                                <div className="pl-6 sm:pl-8 pr-3 sm:pr-4 space-y-3">
+                                  {/* Plats - visas bara på mobil */}
+                                  <div className={`md:hidden p-3 sm:p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-white'}`}>
+                                    <div className="flex items-center gap-2">
+                                      <MapPin className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+                                      <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Plats:</span>
+                                      <span className={`font-medium ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>{catch_item.location_name}</span>
+                                    </div>
+                                  </div>
+
                                   {catch_item.weather_data && (
                                     <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-white'} space-y-2`}>
                                       <h4 className={`font-semibold text-sm mb-2 ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Väderdata</h4>
@@ -561,7 +598,7 @@ export default function Dashboard() {
                                     </div>
                                   )}
                                   {catch_item.notes && (
-                                    <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-white'}`}>
+                                    <div className={`p-3 sm:p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-white'}`}>
                                       <div className="flex items-start gap-2">
                                         <StickyNote className={`w-4 h-4 mt-0.5 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
                                         <div>
@@ -571,6 +608,17 @@ export default function Dashboard() {
                                       </div>
                                     </div>
                                   )}
+
+                                  {/* Radera-knapp - visas bara på mobil */}
+                                  <div className="sm:hidden flex justify-end pt-2" onClick={(e) => e.stopPropagation()}>
+                                    <button
+                                      onClick={() => handleDeleteCatch(catch_item.id)}
+                                      className="inline-flex items-center gap-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 px-3 py-2 rounded-lg transition-colors"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                      <span>Radera fångst</span>
+                                    </button>
+                                  </div>
                                 </div>
                               </td>
                             </tr>
