@@ -67,9 +67,16 @@ export default function AddCatchForm({ onSuccess, onCancel, userId, darkMode = f
     try {
       // Använd Google Maps Geocoding API
       const response = await fetch(
-        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lon}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&language=sv&result_type=natural_feature|locality|administrative_area_level_2`
+        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lon}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&language=sv`
       )
       const data = await response.json()
+
+      console.log('Geocoding response:', data)
+
+      if (data.status !== 'OK') {
+        console.error('Geocoding error:', data.status, data.error_message)
+        return
+      }
 
       if (data.results && data.results.length > 0) {
         // Prioritera: sjö/naturlig feature > ort > kommun
@@ -81,7 +88,7 @@ export default function AddCatchForm({ onSuccess, onCancel, userId, darkMode = f
 
         // Kolla efter sjö/naturlig feature
         const naturalFeature = components.find((c) =>
-          c.types.includes('natural_feature') || c.types.includes('establishment')
+          c.types.includes('natural_feature') || c.types.includes('establishment') || c.types.includes('park')
         )
 
         // Kolla efter ort
@@ -91,6 +98,8 @@ export default function AddCatchForm({ onSuccess, onCancel, userId, darkMode = f
         const adminArea = components.find((c) => c.types.includes('administrative_area_level_2'))
 
         const locationName = naturalFeature?.long_name || locality?.long_name || adminArea?.long_name || result.formatted_address
+
+        console.log('Setting location name:', locationName)
 
         setFormData(prev => ({
           ...prev,

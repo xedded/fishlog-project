@@ -62,8 +62,11 @@ export async function POST(request: NextRequest) {
       .select('id, name_swedish')
 
     if (speciesError || !species) {
+      console.error('Species fetch error:', speciesError)
       return NextResponse.json({ error: 'Failed to fetch species' }, { status: 500 })
     }
+
+    console.log('Available species:', species.map(s => s.name_swedish))
 
     const generatedCatches = []
 
@@ -77,7 +80,10 @@ export async function POST(request: NextRequest) {
 
       // Hitta motsvarande art i databasen
       const dbSpecies = species.find(s => s.name_swedish === fishType.name)
-      if (!dbSpecies) continue
+      if (!dbSpecies) {
+        console.warn(`Species not found in DB: ${fishType.name}`)
+        continue
+      }
 
       // Generera realistiska mått
       const weight = Math.round(randomInRange(fishType.minWeight, fishType.maxWeight) * 100) / 100
@@ -141,10 +147,14 @@ export async function POST(request: NextRequest) {
         .select()
         .single()
 
-      if (!catchError && catchData) {
+      if (catchError) {
+        console.error('Catch insert error:', catchError)
+      } else if (catchData) {
         generatedCatches.push(catchData)
       }
     }
+
+    console.log(`Generated ${generatedCatches.length} catches`)
 
     return NextResponse.json({
       success: true,
