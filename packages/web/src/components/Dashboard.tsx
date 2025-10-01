@@ -275,6 +275,32 @@ export default function Dashboard() {
     }
   }
 
+  const handleGenerateDemo = async () => {
+    if (!user) return
+
+    setLoading(true)
+    try {
+      const response = await fetch('/api/generate-demo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id })
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        alert(`${data.count} demofångster har genererats!`)
+        fetchCatches()
+      } else {
+        alert('Fel vid generering: ' + (data.error || 'Okänt fel'))
+      }
+    } catch (error) {
+      alert('Fel vid generering: ' + (error instanceof Error ? error.message : 'Okänt fel'))
+    } finally {
+      setLoading(false)
+    }
+  }
+
   if (loading) {
     return <div className="flex justify-center items-center min-h-screen">
       <div className="text-xl">Laddar fångster...</div>
@@ -374,6 +400,16 @@ export default function Dashboard() {
                     </button>
                   </div>
                 )}
+                <button
+                  onClick={handleGenerateDemo}
+                  disabled={loading}
+                  className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50"
+                  title="Generera 10 slumpmässiga demofångster"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span className="hidden sm:inline">Generera demodata</span>
+                  <span className="sm:hidden">Demo</span>
+                </button>
                 <button
                   onClick={handleAddCatch}
                   className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
@@ -491,7 +527,7 @@ export default function Dashboard() {
                 <table className="min-w-full">
                   <thead className={darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}>
                     <tr>
-                      <th className={`px-3 sm:px-4 py-3.5 text-left text-xs font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-700'} uppercase tracking-wider w-8 sm:w-12`}></th>
+                      <th className={`hidden sm:table-cell px-3 sm:px-4 py-3.5 text-left text-xs font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-700'} uppercase tracking-wider w-8 sm:w-12`}></th>
                       <th
                         className={`px-3 sm:px-4 py-3.5 text-left text-xs font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-700'} uppercase tracking-wider cursor-pointer hover:bg-opacity-80 select-none`}
                         onClick={() => handleColumnSort('species')}
@@ -539,7 +575,7 @@ export default function Dashboard() {
                         <React.Fragment key={catch_item.id}>
                           <tr className={`${darkMode ? 'hover:bg-gray-700/50 border-gray-700/50' : 'hover:bg-gray-50 border-gray-200'} transition-colors border-b cursor-pointer`}
                               onClick={() => toggleRow(catch_item.id)}>
-                            <td className="px-3 sm:px-4 py-3 sm:py-4">
+                            <td className="hidden sm:table-cell px-3 sm:px-4 py-3 sm:py-4">
                               {isExpanded ? (
                                 <ChevronDown className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
                               ) : (
@@ -574,7 +610,7 @@ export default function Dashboard() {
                           </tr>
                           {isExpanded && (
                             <tr className={`${darkMode ? 'bg-gray-750 border-gray-700/50' : 'bg-gray-50 border-gray-200'} border-b`}>
-                              <td colSpan={7} className="px-3 sm:px-4 py-3 sm:py-4">
+                              <td colSpan={6} className="sm:col-span-7 px-3 sm:px-4 py-3 sm:py-4">
                                 <div className="pl-6 sm:pl-8 pr-3 sm:pr-4 space-y-3">
                                   {/* Plats - visas bara på mobil */}
                                   <div className={`md:hidden p-3 sm:p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-white'}`}>

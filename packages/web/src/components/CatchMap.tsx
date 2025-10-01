@@ -67,10 +67,18 @@ function MapContent({ catches, onBoundsChange, darkMode }: { catches: CatchData[
         updateVisibleCatches()
       })
 
+      // Lyssna på klick på kartan för att stänga InfoWindow
+      const clickListener = map.addListener('click', () => {
+        setSelectedCatch(null)
+      })
+
       return () => {
         clearTimeout(timer)
         if (listener) {
           google.maps.event.removeListener(listener)
+        }
+        if (clickListener) {
+          google.maps.event.removeListener(clickListener)
         }
       }
     }
