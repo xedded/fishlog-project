@@ -66,7 +66,14 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [showAddForm, setShowAddForm] = useState(false)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
-  const [darkMode, setDarkMode] = useState(false)
+  const [darkMode, setDarkMode] = useState(() => {
+    // Initialize from localStorage or default to true
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('fishlog-darkmode')
+      return saved ? JSON.parse(saved) : true
+    }
+    return true
+  })
   const [sortBy, setSortBy] = useState<'date' | 'species' | 'weight' | 'length'>('date')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
   const [visibleCatches, setVisibleCatches] = useState<Catch[]>([])
@@ -77,6 +84,13 @@ export default function Dashboard() {
     profile_name: string
     avatar_url?: string
   } | null>(null)
+
+  // Save darkMode to localStorage whenever it changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('fishlog-darkmode', JSON.stringify(darkMode))
+    }
+  }, [darkMode])
 
   const toggleRow = (id: string) => {
     const newExpanded = new Set(expandedRows)

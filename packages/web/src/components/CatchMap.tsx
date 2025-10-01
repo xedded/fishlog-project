@@ -1,7 +1,8 @@
 'use client'
 
-import { APIProvider, Map, Marker, InfoWindow, useMap } from '@vis.gl/react-google-maps'
+import { APIProvider, Map, AdvancedMarker, InfoWindow, useMap } from '@vis.gl/react-google-maps'
 import { useState, useEffect } from 'react'
+import { Fish } from 'lucide-react'
 
 interface CatchData {
   id: string
@@ -75,15 +76,38 @@ function MapContent({ catches, onBoundsChange, darkMode }: { catches: CatchData[
     }
   }, [map, catches]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Get color based on species category
+  const getCategoryColor = (category: string) => {
+    const colors: { [key: string]: string } = {
+      'Rovfisk': '#EF4444', // red
+      'Öring/Lax': '#8B5CF6', // purple
+      'Saltvattensfisk': '#3B82F6', // blue
+      'Karpfisk': '#F59E0B', // yellow
+      'Vitfisk': '#10B981', // green
+    }
+    return colors[category] || '#6B7280' // gray default
+  }
+
   return (
     <>
       {catches.map((catch_item) => (
-        <Marker
+        <AdvancedMarker
           key={catch_item.id}
           position={{ lat: catch_item.latitude, lng: catch_item.longitude }}
           onClick={() => setSelectedCatch(catch_item)}
           title={`${catch_item.species.name_swedish} - ${catch_item.location_name}`}
-        />
+        >
+          <div
+            className="relative flex items-center justify-center w-10 h-10 rounded-full shadow-lg cursor-pointer hover:scale-110 transition-transform"
+            style={{
+              backgroundColor: getCategoryColor(catch_item.species.category),
+              border: '3px solid white',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2)'
+            }}
+          >
+            <Fish className="w-5 h-5 text-white" />
+          </div>
+        </AdvancedMarker>
       ))}
 
       {selectedCatch && (
@@ -251,19 +275,6 @@ export default function CatchMap({ catches, apiKey, onBoundsChange, darkMode = f
     lng: catches.reduce((sum, c) => sum + c.longitude, 0) / catches.length
   } : { lat: 59.3293, lng: 18.0686 } // Stockholm som default
 
-  // Marker color function (not used yet but will be for future features)
-  // const getMarkerColor = (species: string) => {
-  //   const colors: { [key: string]: string } = {
-  //     'Gädda': '#10B981', // green
-  //     'Abborre': '#F59E0B', // yellow
-  //     'Öring': '#8B5CF6', // purple
-  //     'Gös': '#3B82F6', // blue
-  //     'Lax': '#EF4444', // red
-  //     'Torsk': '#6B7280', // gray
-  //     'Makrill': '#06B6D4', // cyan
-  //   }
-  //   return colors[species] || '#6B7280'
-  // }
 
   if (!apiKey) {
     return (

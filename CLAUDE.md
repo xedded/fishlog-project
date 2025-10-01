@@ -12,19 +12,20 @@ Personlig fiskfångst-app med webb och mobilgränssnitt för att registrera fån
 - Väderdata-integration (tryck, temperatur, vind)
 
 ## Teknikstack
-- **Backend:** Next.js API routes + Prisma + PostgreSQL
-- **Webb:** Next.js med TypeScript
+- **Backend:** Next.js API routes + Supabase PostgreSQL
+- **Webb:** Next.js 15 med TypeScript + Tailwind CSS
 - **Mobil:** Expo (React Native) med TypeScript
 - **Databas:** PostgreSQL (Supabase hosting)
-- **Auth:** Supabase Auth
-- **Maps:** Mapbox
-- **Väder:** OpenWeatherMap API
-- **File storage:** Supabase Storage
-- **Offline:** SQLite (Expo) + sync-mekanism
+- **Auth:** Supabase Auth (Email + Google OAuth)
+- **Maps:** Google Maps API (@vis.gl/react-google-maps)
+- **Väder:** Open-Meteo API (gratis, ingen API-nyckel)
+- **Ikoner:** Lucide React
+- **File storage:** Supabase Storage (ej implementerat än)
+- **Offline:** SQLite (Expo) + sync-mekanism (ej implementerat än)
 
 ## Utvecklingsfaser
 
-### Fas 1 - Foundation (vecka 1-2) ← 100% KLAR ✅
+### Fas 1 - Foundation & Core UI ← 100% KLAR ✅
 - [x] Projektsetup + monorepo
 - [x] Databas-schema + Prisma setup
 - [x] Next.js webb-app initialiserad
@@ -41,26 +42,39 @@ Personlig fiskfångst-app med webb och mobilgränssnitt för att registrera fån
   - [x] useAuth hook för state management
   - [x] OAuth callback route
   - [x] Auto-create user profile vid inloggning
+- [x] **Fångstregistrering & Hantering**
+  - [x] Formulär för ny fångst med kartväljare
+  - [x] Radera fångster
+  - [x] Vikt och längd är valfria fält
+  - [x] Darkmode-stöd för formulär
 - [x] **Fångstvisning i Dashboard**
-  - [x] Lista fångster med detaljer (art, vikt, längd, plats, väder)
+  - [x] Grid-vy med kort
+  - [x] Listvy med expanderbara rader
+  - [x] Mobilanpassad listvy (4 kolumner på mobil)
+  - [x] Klickbar kolumnsortering med visuella indikatorer
   - [x] Ladda provdata-funktion
-- [ ] **Fångstregistrering** (pågående)
-  - [ ] Formulär för ny fångst
-  - [ ] Radera fångster
-  - [ ] List/Grid toggle-vy
+  - [x] Darkmode toggle med fullständigt stöd
+  - [x] Moderna Lucide-ikoner genomgående
 
-### Fas 2 - Core Features (vecka 3-4)
-- [ ] Foto-upload funktionalitet
-- [ ] Väder-API integration (auto-fetch vid registrering)
-- [ ] Offline storage (mobil)
-- [ ] Basic sync-mekanism
-
-### Fas 3 - Visualization (vecka 5-6) ← Delvis klar
-- [x] **Kartvy med fångstpunkter** (Google Maps)
+### Fas 2 - Väder & Kartvisualisering ← 100% KLAR ✅
+- [x] **Väder-API integration**
+  - [x] Open-Meteo API (gratis, historisk data upp till 2 år)
+  - [x] Automatisk hämtning vid fångstregistrering
+  - [x] Temperatur, lufttryck, luftfuktighet, vindhastighet, vindriktning
+  - [x] Svensk väderbeskrivning
+  - [x] Vindriktning i väderstreck (N, NNÖ, SÖ, etc.)
+- [x] **Kartvisualisering (Google Maps)**
   - [x] Markers för varje fångst
-  - [x] InfoWindow med fångstdetaljer
+  - [x] InfoWindow med fångstdetaljer och väderdata
+  - [x] Darkmode-stöd för karta
+  - [x] Kartbaserad filtrering (zoom/pan uppdaterar listan)
+  - [x] Kartväljare i fångstformuläret
+
+### Fas 3 - Statistik & Foto ← EJ PÅBÖRJAD
+- [ ] Foto-upload funktionalitet
 - [ ] Basic statistik och listor
 - [ ] Filtrering på art/datum
+- [ ] Trendgrafer (vikt över tid, fångster per månad)
 
 ### Fas 4 - Advanced Features (vecka 7-8)
 - [ ] Heatmaps och avancerade kartor
@@ -82,48 +96,90 @@ fishlog-project/
 ```
 
 ## Status och nästa steg
-✅ **Klart:**
-- Monorepo struktur med workspaces
-- Next.js webb-app med TypeScript + Tailwind
-- Expo React Native app med TypeScript
-- Prisma databas-schema designat
-- Delat TypeScript paket med types och utils
-- GitHub repository: https://github.com/xedded/fishlog-project
-- Vercel deployment konfiguration
-- Komplett testdata med svenska fiskar och platser
-- Database seeding scripts
-- Supabase setup dokumentation
-- **Supabase databas deployment med fullständig testdata**
-- **Environment variables konfigurerade**
-- **Auth implementation komplett:**
-  - Supabase client konfigurerad
-  - AuthForm med email/password + Google OAuth
-  - useAuth hook
-  - OAuth callback route
-  - User profile auto-creation
-- **Dashboard komplett:**
-  - Fångstlista med detaljer
-  - Google Maps integration med markers och InfoWindow
-  - Ladda provdata-funktion
 
-🎯 **Testdata i databas:**
-- 1 testanvändare: test@fishlog.se (lösenord: testpassword123)
-- 10 svenska fiskarter (Gädda, Abborre, Öring, Lax, etc.)
+### ✅ Fas 1 & 2 - KLART (Foundation + Väder + Karta)
+
+**Infrastruktur:**
+- Monorepo struktur med workspaces
+- Next.js 15 webb-app med TypeScript + Tailwind CSS
+- Expo React Native app med TypeScript (ej kopplad än)
+- Supabase PostgreSQL databas
+- GitHub repository: https://github.com/xedded/fishlog-project
+- Vercel deployment (packages/web som root directory)
+- Environment variables konfigurerade
+
+**Auth & Användare:**
+- Supabase Auth med email/lösenord
+- Google OAuth integration
+- useAuth hook för state management
+- Automatisk user profile-skapande
+- Testanvändare: test@fishlog.se (lösenord: testpassword123)
+
+**Fångsthantering:**
+- AddCatchForm med kartväljare (Google Maps)
+- Automatisk geolocation
+- Valfri vikt/längd
+- Radera fångster
+- Ladda provdata-funktion
+- Fullständigt darkmode-stöd
+
+**Dashboard & UI:**
+- **Grid-vy:** Kort med alla detaljer, ikoner, väderdata
+- **Listvy:**
+  - Expanderbara rader (klicka för att visa väder/anteckningar)
+  - Klickbar kolumnsortering med pilikoner
+  - Mobilanpassad (4 kolumner på mobil: Art, Vikt, Längd, Datum)
+  - Plats och Radera visas i expanderad vy på mobil
+- **Darkmode:** Komplett stöd för alla komponenter
+- **Ikoner:** Moderna Lucide React-ikoner genomgående
+- **Responsiv design:** Optimerad för mobil, tablet, desktop
+
+**Kartfunktioner:**
+- Google Maps (@vis.gl/react-google-maps)
+- Markers för varje fångst
+- InfoWindow popup med full info
+- Darkmode-stöd för kartan
+- Kartbaserad filtrering (synliga fångster baserat på zoom/pan)
+- Kartväljare i fångstformuläret
+
+**Väderintegration:**
+- Open-Meteo API (gratis, ingen API-nyckel)
+- Automatisk hämtning vid fångstregistrering
+- Historisk data upp till 2 år bakåt
+- Data: Temperatur, lufttryck, luftfuktighet, vindhastighet, vindriktning
+- Svensk väderbeskrivning
+- Vindriktning konverterad till väderstreck (N, NNÖ, NÖ, ÖNÖ, etc.)
+
+**Testdata i databas:**
+- 10 svenska fiskarter (Gädda, Abborre, Öring, Lax, Gös, Torsk, Makrill, etc.)
 - 5 favoritplatser (Vänern, Vättern, Mörrum, etc.)
 - 6 realistiska fångster med väderdata
 
-🚧 **Pågående (idag):**
-1. Fångstregistrerings-formulär
-2. Radera fångster-funktion
-3. List/Grid toggle-vy
-4. Deploy till Vercel
+### 🚀 Nästa steg - Fas 3 (Statistik & Foto)
 
-🚀 **Nästa steg (efter idag):**
-1. Foto-upload funktionalitet
-2. Väder-API integration (auto-fetch)
-3. Statistik och trendgrafer
-4. Filtrering på art/datum
-5. Koppla mobile app till Supabase
+**Högsta prioritet:**
+1. **Foto-upload:** Supabase Storage integration för fångstbilder
+2. **Custom map markers:** Stilrena markers som matchar appens design
+3. **Filtrering:** Filtrera fångster på art och datumintervall
+4. **Basic statistik:**
+   - Total antal fångster
+   - Största fångst (vikt/längd)
+   - Fångster per art (diagram)
+   - Favorit fiskeplats
+
+**Medium prioritet:**
+5. **Trendgrafer:**
+   - Vikt över tid (line chart)
+   - Fångster per månad (bar chart)
+   - Väderkorrelation (scatter plot)
+6. **Export-funktion:** Exportera fångster till CSV/JSON
+7. **Dela fångst:** Generera delbar länk med bild
+
+**Lägre prioritet:**
+8. **Mobile app:** Koppla Expo-app till Supabase
+9. **Offline-funktionalitet:** SQLite + sync för mobil
+10. **Heatmaps:** Värmekartor för fångstplatser
+11. **Push-notiser:** Påminnelser om fiske
 
 ## Deployment Configuration (VIKTIGT!)
 
