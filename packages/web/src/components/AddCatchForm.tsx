@@ -65,22 +65,32 @@ export default function AddCatchForm({ onSuccess, onCancel, userId, darkMode = f
 
   const fetchLocationName = async (lat: number, lon: number) => {
     try {
-      // Använd Google Maps Geocoding API
-      const response = await fetch(
+      // Försök med Geocoding API först
+      const geocodeResponse = await fetch(
         `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lon}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&language=sv`
       )
-      const data = await response.json()
+      const geocodeData = await geocodeResponse.json()
 
-      console.log('Geocoding response:', data)
+      console.log('Geocoding response:', geocodeData)
 
-      if (data.status !== 'OK') {
-        console.error('Geocoding error:', data.status, data.error_message)
+      if (geocodeData.status === 'REQUEST_DENIED') {
+        console.warn('Geocoding API not enabled, using formatted coordinates instead')
+        // Fallback: Visa koordinater formaterade
+        setFormData(prev => ({
+          ...prev,
+          location_name: `${lat.toFixed(4)}°N, ${lon.toFixed(4)}°E`
+        }))
         return
       }
 
-      if (data.results && data.results.length > 0) {
+      if (geocodeData.status !== 'OK') {
+        console.error('Geocoding error:', geocodeData.status, geocodeData.error_message)
+        return
+      }
+
+      if (geocodeData.results && geocodeData.results.length > 0) {
         // Prioritera: sjö/naturlig feature > ort > kommun
-        const result = data.results[0]
+        const result = geocodeData.results[0]
         const components = result.address_components as Array<{
           long_name: string
           types: string[]
@@ -108,6 +118,11 @@ export default function AddCatchForm({ onSuccess, onCancel, userId, darkMode = f
       }
     } catch (error) {
       console.error('Failed to fetch location name:', error)
+      // Fallback vid nätverksfel
+      setFormData(prev => ({
+        ...prev,
+        location_name: `${lat.toFixed(4)}°N, ${lon.toFixed(4)}°E`
+      }))
     }
   }
 
