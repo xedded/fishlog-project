@@ -74,18 +74,21 @@ export default function AddCatchForm({ onSuccess, onCancel, userId, darkMode = f
       if (data.results && data.results.length > 0) {
         // Prioritera: sjö/naturlig feature > ort > kommun
         const result = data.results[0]
-        const components = result.address_components
+        const components = result.address_components as Array<{
+          long_name: string
+          types: string[]
+        }>
 
         // Kolla efter sjö/naturlig feature
-        const naturalFeature = components.find((c: any) =>
+        const naturalFeature = components.find((c) =>
           c.types.includes('natural_feature') || c.types.includes('establishment')
         )
 
         // Kolla efter ort
-        const locality = components.find((c: any) => c.types.includes('locality'))
+        const locality = components.find((c) => c.types.includes('locality'))
 
         // Kolla efter kommun
-        const adminArea = components.find((c: any) => c.types.includes('administrative_area_level_2'))
+        const adminArea = components.find((c) => c.types.includes('administrative_area_level_2'))
 
         const locationName = naturalFeature?.long_name || locality?.long_name || adminArea?.long_name || result.formatted_address
 
