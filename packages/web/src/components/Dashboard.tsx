@@ -295,11 +295,15 @@ export default function Dashboard() {
                     <div className="space-y-3 text-sm">
                       <div className="flex justify-between items-center">
                         <span className="text-gray-700 font-medium">Vikt:</span>
-                        <span className="text-gray-900 font-semibold">{catch_item.weight} kg</span>
+                        <span className="text-gray-900 font-semibold">
+                          {catch_item.weight ? `${catch_item.weight} kg` : 'Okänd'}
+                        </span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-gray-700 font-medium">Längd:</span>
-                        <span className="text-gray-900 font-semibold">{catch_item.length} cm</span>
+                        <span className="text-gray-900 font-semibold">
+                          {catch_item.length ? `${catch_item.length} cm` : 'Okänd'}
+                        </span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-gray-700 font-medium">Plats:</span>
@@ -352,8 +356,12 @@ export default function Dashboard() {
                             <div className="text-sm text-gray-500 italic">{catch_item.species.name_latin}</div>
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{catch_item.weight} kg</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{catch_item.length} cm</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {catch_item.weight ? `${catch_item.weight} kg` : 'Okänd'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {catch_item.length ? `${catch_item.length} cm` : 'Okänd'}
+                        </td>
                         <td className="px-6 py-4 text-sm text-blue-700 font-medium max-w-xs truncate">{catch_item.location_name}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {new Date(catch_item.caught_at).toLocaleDateString('sv-SE')}

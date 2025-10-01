@@ -119,8 +119,8 @@ export default function AddCatchForm({ onSuccess, onCancel, userId }: AddCatchFo
         .insert({
           user_id: userId,
           species_id: formData.species_id,
-          weight: parseFloat(formData.weight),
-          length: parseFloat(formData.length),
+          weight: formData.weight ? parseFloat(formData.weight) : null,
+          length: formData.length ? parseFloat(formData.length) : null,
           latitude: parseFloat(formData.latitude),
           longitude: parseFloat(formData.longitude),
           location_name: formData.location_name,
@@ -172,30 +172,28 @@ export default function AddCatchForm({ onSuccess, onCancel, userId }: AddCatchFo
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Vikt (kg) *
+                  Vikt (kg)
                 </label>
                 <input
                   type="number"
                   step="0.01"
-                  required
                   value={formData.weight}
                   onChange={(e) => setFormData({ ...formData, weight: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
-                  placeholder="2.5"
+                  placeholder="2.5 (eller lämna tom för okänd)"
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Längd (cm) *
+                  Längd (cm)
                 </label>
                 <input
                   type="number"
                   step="0.1"
-                  required
                   value={formData.length}
                   onChange={(e) => setFormData({ ...formData, length: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
-                  placeholder="45.5"
+                  placeholder="45.5 (eller lämna tom för okänd)"
                 />
               </div>
             </div>

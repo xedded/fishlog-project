@@ -81,38 +81,38 @@ export default function CatchMap({ catches, apiKey }: CatchMapProps) {
               position={{ lat: selectedCatch.latitude, lng: selectedCatch.longitude }}
               onCloseClick={() => setSelectedCatch(null)}
             >
-              <div className="p-2 max-w-xs">
-                <h3 className="font-bold text-lg text-gray-900">
+              <div className="p-3 max-w-xs bg-white rounded-lg shadow-lg">
+                <h3 className="font-bold text-lg text-gray-900 mb-1">
                   {selectedCatch.species.name_swedish}
                 </h3>
-                <p className="text-sm text-gray-600 italic mb-2">
+                <p className="text-sm text-gray-700 italic mb-3">
                   {selectedCatch.species.name_latin}
                 </p>
 
-                <div className="space-y-1 text-sm">
+                <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Vikt:</span>
-                    <span className="font-medium">{selectedCatch.weight} kg</span>
+                    <span className="text-gray-700 font-medium">Vikt:</span>
+                    <span className="font-semibold text-gray-900">{selectedCatch.weight} kg</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Längd:</span>
-                    <span className="font-medium">{selectedCatch.length} cm</span>
+                    <span className="text-gray-700 font-medium">Längd:</span>
+                    <span className="font-semibold text-gray-900">{selectedCatch.length} cm</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Plats:</span>
-                    <span className="font-medium text-blue-700">{selectedCatch.location_name}</span>
+                    <span className="text-gray-700 font-medium">Plats:</span>
+                    <span className="font-semibold text-blue-700">{selectedCatch.location_name}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Datum:</span>
-                    <span className="font-medium">
+                    <span className="text-gray-700 font-medium">Datum:</span>
+                    <span className="font-semibold text-gray-900">
                       {new Date(selectedCatch.caught_at).toLocaleDateString('sv-SE')}
                     </span>
                   </div>
                 </div>
 
                 {selectedCatch.notes && (
-                  <div className="mt-2 pt-2 border-t border-gray-200">
-                    <p className="text-xs text-gray-700 italic">{selectedCatch.notes}</p>
+                  <div className="mt-3 pt-3 border-t border-gray-300">
+                    <p className="text-xs text-gray-800 italic bg-gray-50 p-2 rounded">{selectedCatch.notes}</p>
                   </div>
                 )}
               </div>
