@@ -68,6 +68,18 @@ export async function POST(request: NextRequest) {
 
     console.log('Available species:', species.map(s => s.name_swedish))
 
+    // Filtrera FISH_SPECIES så vi bara använder arter som finns i databasen
+    const availableFishTypes = FISH_SPECIES.filter(fishType =>
+      species.some(s => s.name_swedish === fishType.name)
+    )
+
+    console.log('Matching fish types:', availableFishTypes.map(f => f.name))
+
+    if (availableFishTypes.length === 0) {
+      console.error('No matching species found!')
+      return NextResponse.json({ error: 'No matching species in database' }, { status: 500 })
+    }
+
     const generatedCatches = []
 
     // Generera 10 fångster
@@ -75,8 +87,8 @@ export async function POST(request: NextRequest) {
       // Välj slumpmässig plats
       const location = SWEDISH_WATERS[randomInt(0, SWEDISH_WATERS.length - 1)]
 
-      // Välj slumpmässig art
-      const fishType = FISH_SPECIES[randomInt(0, FISH_SPECIES.length - 1)]
+      // Välj slumpmässig art från de som finns
+      const fishType = availableFishTypes[randomInt(0, availableFishTypes.length - 1)]
 
       // Hitta motsvarande art i databasen
       const dbSpecies = species.find(s => s.name_swedish === fishType.name)
@@ -84,6 +96,8 @@ export async function POST(request: NextRequest) {
         console.warn(`Species not found in DB: ${fishType.name}`)
         continue
       }
+
+      console.log(`Generating catch ${i + 1}: ${fishType.name} at ${location.name}`)
 
       // Generera realistiska mått
       const weight = Math.round(randomInRange(fishType.minWeight, fishType.maxWeight) * 100) / 100

@@ -65,55 +65,16 @@ export default function AddCatchForm({ onSuccess, onCancel, userId, darkMode = f
 
   const fetchLocationName = async (lat: number, lon: number) => {
     try {
-      // Försök med Geocoding API först
-      const geocodeResponse = await fetch(
-        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lon}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&language=sv`
-      )
-      const geocodeData = await geocodeResponse.json()
+      // Använd server-side API route för geocoding
+      const response = await fetch(`/api/geocode?lat=${lat}&lon=${lon}`)
+      const data = await response.json()
 
-      console.log('Geocoding response:', geocodeData)
+      console.log('Geocoding response:', data)
 
-      if (geocodeData.status === 'REQUEST_DENIED') {
-        console.warn('Geocoding API not enabled, using formatted coordinates instead')
-        // Fallback: Visa koordinater formaterade
+      if (data.location_name) {
         setFormData(prev => ({
           ...prev,
-          location_name: `${lat.toFixed(4)}°N, ${lon.toFixed(4)}°E`
-        }))
-        return
-      }
-
-      if (geocodeData.status !== 'OK') {
-        console.error('Geocoding error:', geocodeData.status, geocodeData.error_message)
-        return
-      }
-
-      if (geocodeData.results && geocodeData.results.length > 0) {
-        // Prioritera: sjö/naturlig feature > ort > kommun
-        const result = geocodeData.results[0]
-        const components = result.address_components as Array<{
-          long_name: string
-          types: string[]
-        }>
-
-        // Kolla efter sjö/naturlig feature
-        const naturalFeature = components.find((c) =>
-          c.types.includes('natural_feature') || c.types.includes('establishment') || c.types.includes('park')
-        )
-
-        // Kolla efter ort
-        const locality = components.find((c) => c.types.includes('locality'))
-
-        // Kolla efter kommun
-        const adminArea = components.find((c) => c.types.includes('administrative_area_level_2'))
-
-        const locationName = naturalFeature?.long_name || locality?.long_name || adminArea?.long_name || result.formatted_address
-
-        console.log('Setting location name:', locationName)
-
-        setFormData(prev => ({
-          ...prev,
-          location_name: locationName
+          location_name: data.location_name
         }))
       }
     } catch (error) {
