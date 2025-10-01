@@ -125,6 +125,39 @@ fishlog-project/
 4. Filtrering på art/datum
 5. Koppla mobile app till Supabase
 
+## Deployment Configuration (VIKTIGT!)
+
+### Vercel Setup - Monorepo Configuration
+**Vercel Project Name:** `fishlog-web`
+**GitHub Repo:** `xedded/fishlog-project`
+
+⚠️ **KRITISK INFORMATION - FÖLJ DESSA STEG:**
+
+1. **Root Directory Configuration:**
+   - Gå till Vercel Dashboard → fishlog-web → Settings → General
+   - Under "Root Directory", sätt till: `packages/web`
+   - Detta är NÖDVÄNDIGT eftersom Next.js-appen ligger i packages/web, inte i root
+
+2. **ANVÄND INTE root vercel.json:**
+   - Ska INTE finnas någon vercel.json i projektets root
+   - Endast packages/web/vercel.json ska finnas (med `{"framework": "nextjs"}`)
+   - Om du lägger till custom buildCommand/outputDirectory i root vercel.json får du 404-fel
+
+3. **Environment Variables i Vercel:**
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`
+
+4. **Vid deployment-problem:**
+   - Kontrollera att Root Directory är satt till `packages/web`
+   - Ta bort eventuell root vercel.json
+   - Trigga en Redeploy från Vercel dashboard
+
+### Vanliga deployment-fel och lösningar:
+- ❌ "No Output Directory named 'public' found" → Root Directory ej konfigurerad
+- ❌ "Function Runtimes must have a valid version" → Ta bort custom runtime config
+- ❌ 404 på deployed site → Root Directory ej satt ELLER custom vercel.json i root
+
 ## Kommandoöversikt
 ```bash
 # Starta utveckling
