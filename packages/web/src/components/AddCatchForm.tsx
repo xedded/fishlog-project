@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
+import { APIProvider, Map, AdvancedMarker } from '@vis.gl/react-google-maps'
 
 interface Species {
   id: string
@@ -18,6 +19,7 @@ interface AddCatchFormProps {
 export default function AddCatchForm({ onSuccess, onCancel, userId }: AddCatchFormProps) {
   const [species, setSpecies] = useState<Species[]>([])
   const [loading, setLoading] = useState(false)
+  const [useMapPicker, setUseMapPicker] = useState(false)
   const [formData, setFormData] = useState({
     species_id: '',
     weight: '',
@@ -43,6 +45,12 @@ export default function AddCatchForm({ onSuccess, onCancel, userId }: AddCatchFo
         },
         (error) => {
           console.log('Geolocation error:', error)
+          // Fallback till Sverige-centrum om geolocation misslyckas
+          setFormData(prev => ({
+            ...prev,
+            latitude: '62.0',
+            longitude: '15.0'
+          }))
         }
       )
     }
@@ -100,7 +108,7 @@ export default function AddCatchForm({ onSuccess, onCancel, userId }: AddCatchFo
                 required
                 value={formData.species_id}
                 onChange={(e) => setFormData({ ...formData, species_id: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
               >
                 <option value="">Välj art...</option>
                 {species.map((s) => (
@@ -123,7 +131,7 @@ export default function AddCatchForm({ onSuccess, onCancel, userId }: AddCatchFo
                   required
                   value={formData.weight}
                   onChange={(e) => setFormData({ ...formData, weight: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                   placeholder="2.5"
                 />
               </div>
@@ -137,7 +145,7 @@ export default function AddCatchForm({ onSuccess, onCancel, userId }: AddCatchFo
                   required
                   value={formData.length}
                   onChange={(e) => setFormData({ ...formData, length: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                   placeholder="45.5"
                 />
               </div>
@@ -153,40 +161,94 @@ export default function AddCatchForm({ onSuccess, onCancel, userId }: AddCatchFo
                 required
                 value={formData.location_name}
                 onChange={(e) => setFormData({ ...formData, location_name: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                 placeholder="Vänern - Kållandsö"
               />
             </div>
 
-            {/* Koordinater */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Latitud *
+            {/* Platsväljare */}
+            <div>
+              <div className="flex items-center gap-3 mb-2">
+                <label className="text-sm font-medium text-gray-700">
+                  Position:
                 </label>
-                <input
-                  type="number"
-                  step="0.000001"
-                  required
-                  value={formData.latitude}
-                  onChange={(e) => setFormData({ ...formData, latitude: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="59.329323"
-                />
+                <button
+                  type="button"
+                  onClick={() => setUseMapPicker(!useMapPicker)}
+                  className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                >
+                  {useMapPicker ? '📍 Använd automatisk plats' : '🗺️ Välj på karta'}
+                </button>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Longitud *
-                </label>
-                <input
-                  type="number"
-                  step="0.000001"
-                  required
-                  value={formData.longitude}
-                  onChange={(e) => setFormData({ ...formData, longitude: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="18.068581"
-                />
+
+              {useMapPicker && (
+                <div className="mb-3">
+                  <APIProvider apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ''}>
+                    <div className="h-64 rounded-md overflow-hidden border border-gray-300">
+                      <Map
+                        defaultCenter={{
+                          lat: parseFloat(formData.latitude) || 62.0,
+                          lng: parseFloat(formData.longitude) || 15.0
+                        }}
+                        defaultZoom={6}
+                        mapId="add-catch-map"
+                        onClick={(e) => {
+                          if (e.detail.latLng) {
+                            setFormData({
+                              ...formData,
+                              latitude: e.detail.latLng.lat.toFixed(6),
+                              longitude: e.detail.latLng.lng.toFixed(6)
+                            })
+                          }
+                        }}
+                      >
+                        {formData.latitude && formData.longitude && (
+                          <AdvancedMarker
+                            position={{
+                              lat: parseFloat(formData.latitude),
+                              lng: parseFloat(formData.longitude)
+                            }}
+                          />
+                        )}
+                      </Map>
+                    </div>
+                  </APIProvider>
+                  <p className="text-xs text-gray-600 mt-1">Klicka på kartan för att välja position</p>
+                </div>
+              )}
+
+              {/* Koordinater (visas alltid, disabled om map picker används) */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">
+                    Latitud *
+                  </label>
+                  <input
+                    type="number"
+                    step="0.000001"
+                    required
+                    value={formData.latitude}
+                    onChange={(e) => setFormData({ ...formData, latitude: e.target.value })}
+                    disabled={useMapPicker}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 disabled:bg-gray-100 disabled:text-gray-600"
+                    placeholder="59.329323"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">
+                    Longitud *
+                  </label>
+                  <input
+                    type="number"
+                    step="0.000001"
+                    required
+                    value={formData.longitude}
+                    onChange={(e) => setFormData({ ...formData, longitude: e.target.value })}
+                    disabled={useMapPicker}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 disabled:bg-gray-100 disabled:text-gray-600"
+                    placeholder="18.068581"
+                  />
+                </div>
               </div>
             </div>
 
@@ -200,7 +262,7 @@ export default function AddCatchForm({ onSuccess, onCancel, userId }: AddCatchFo
                 required
                 value={formData.caught_at}
                 onChange={(e) => setFormData({ ...formData, caught_at: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
               />
             </div>
 
@@ -213,7 +275,7 @@ export default function AddCatchForm({ onSuccess, onCancel, userId }: AddCatchFo
                 value={formData.notes}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                 placeholder="Bra fiske med wobbler vid gräsbänk..."
               />
             </div>
