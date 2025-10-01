@@ -71,18 +71,25 @@ export default function AddCatchForm({ onSuccess, onCancel, userId, darkMode = f
 
       console.log('Geocoding response:', data)
 
-      if (data.location_name) {
+      if (data.location_name && data.status === 'OK') {
         setFormData(prev => ({
           ...prev,
           location_name: data.location_name
         }))
+      } else {
+        // Om geocoding failar, låt användaren fylla i manuellt
+        console.warn('Geocoding not available, user must enter location manually')
+        setFormData(prev => ({
+          ...prev,
+          location_name: ''
+        }))
       }
     } catch (error) {
       console.error('Failed to fetch location name:', error)
-      // Fallback vid nätverksfel
+      // Låt användaren fylla i manuellt
       setFormData(prev => ({
         ...prev,
-        location_name: `${lat.toFixed(4)}°N, ${lon.toFixed(4)}°E`
+        location_name: ''
       }))
     }
   }
@@ -245,8 +252,11 @@ export default function AddCatchForm({ onSuccess, onCancel, userId, darkMode = f
                 value={formData.location_name}
                 onChange={(e) => setFormData({ ...formData, location_name: e.target.value })}
                 className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 text-gray-900'}`}
-                placeholder="Vänern - Kållandsö"
+                placeholder="t.ex. Vänern, Mörrum, eller valfritt namn"
               />
+              <p className={`text-xs mt-1 ${darkMode ? 'text-gray-500' : 'text-gray-600'}`}>
+                Platsnamn hämtas automatiskt från din position, men du kan redigera det
+              </p>
             </div>
 
             {/* Platsväljare */}
