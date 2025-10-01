@@ -1,19 +1,20 @@
 'use client'
 
-import { APIProvider, Map, Marker, InfoWindow } from '@vis.gl/react-google-maps'
-import { useState } from 'react'
+import { APIProvider, Map, Marker, InfoWindow, useMap } from '@vis.gl/react-google-maps'
+import { useState, useEffect } from 'react'
 
 interface CatchData {
   id: string
   latitude: number
   longitude: number
   location_name: string
-  weight: number
-  length: number
+  weight: number | null
+  length: number | null
   caught_at: string
   species: {
     name_swedish: string
     name_latin: string
+    category: string
   }
   weather_data?: {
     temperature: number
@@ -32,15 +33,9 @@ interface CatchMapProps {
   onBoundsChange?: (visibleCatches: CatchData[]) => void
 }
 
-export default function CatchMap({ catches, apiKey, onBoundsChange }: CatchMapProps) {
+function MapContent({ catches, onBoundsChange }: { catches: CatchData[], onBoundsChange?: (visibleCatches: CatchData[]) => void }) {
+  const map = useMap()
   const [selectedCatch, setSelectedCatch] = useState<CatchData | null>(null)
-  const [map, setMap] = useState<google.maps.Map | null>(null)
-
-  // Beräkna center baserat på fångster
-  const center = catches.length > 0 ? {
-    lat: catches.reduce((sum, c) => sum + c.latitude, 0) / catches.length,
-    lng: catches.reduce((sum, c) => sum + c.longitude, 0) / catches.length
-  } : { lat: 59.3293, lng: 18.0686 } // Stockholm som default
 
   // Funktion för att kolla vilka fångster som är synliga
   const updateVisibleCatches = () => {
@@ -56,6 +51,115 @@ export default function CatchMap({ catches, apiKey, onBoundsChange }: CatchMapPr
 
     onBoundsChange(visibleCatches)
   }
+
+  // Initial update när kartan laddas och när bounds ändras
+  useEffect(() => {
+    if (map && onBoundsChange) {
+      // Ge kartan lite tid att ladda
+      const timer = setTimeout(() => {
+        updateVisibleCatches()
+      }, 100)
+
+      // Lyssna på bounds_changed event
+      const listener = map.addListener('bounds_changed', () => {
+        updateVisibleCatches()
+      })
+
+      return () => {
+        clearTimeout(timer)
+        if (listener) {
+          google.maps.event.removeListener(listener)
+        }
+      }
+    }
+  }, [map, catches]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  return (
+    <>
+      {catches.map((catch_item) => (
+        <Marker
+          key={catch_item.id}
+          position={{ lat: catch_item.latitude, lng: catch_item.longitude }}
+          onClick={() => setSelectedCatch(catch_item)}
+          title={`${catch_item.species.name_swedish} - ${catch_item.location_name}`}
+        />
+      ))}
+
+      {selectedCatch && (
+        <InfoWindow
+          position={{ lat: selectedCatch.latitude, lng: selectedCatch.longitude }}
+          onCloseClick={() => setSelectedCatch(null)}
+        >
+          <div className="p-2 max-w-xs bg-white rounded-lg shadow-lg">
+            <h3 className="font-bold text-lg text-gray-900 mb-3">
+              {selectedCatch.species.name_swedish}
+            </h3>
+
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-700 font-medium">Vikt:</span>
+                <span className="font-semibold text-gray-900">
+                  {selectedCatch.weight ? `${selectedCatch.weight} kg` : 'Okänd'}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-700 font-medium">Längd:</span>
+                <span className="font-semibold text-gray-900">
+                  {selectedCatch.length ? `${selectedCatch.length} cm` : 'Okänd'}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-700 font-medium">Plats:</span>
+                <span className="font-semibold text-blue-700">{selectedCatch.location_name}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-700 font-medium">Datum:</span>
+                <span className="font-semibold text-gray-900">
+                  {new Date(selectedCatch.caught_at).toLocaleDateString('sv-SE')}
+                </span>
+              </div>
+              {selectedCatch.weather_data && (
+                <>
+                  <div className="flex justify-between">
+                    <span className="text-gray-700 font-medium">Väder:</span>
+                    <span className="font-semibold text-green-700">
+                      {selectedCatch.weather_data.temperature}°C, {selectedCatch.weather_data.weather_desc}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-700 font-medium">Vind:</span>
+                    <span className="font-semibold text-gray-900">
+                      {selectedCatch.weather_data.wind_speed} m/s, {selectedCatch.weather_data.wind_direction}°
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-700 font-medium">Lufttryck:</span>
+                    <span className="font-semibold text-gray-900">
+                      {selectedCatch.weather_data.pressure} hPa
+                    </span>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {selectedCatch.notes && (
+              <div className="mt-3 pt-3 border-t border-gray-300">
+                <p className="text-xs text-gray-800 italic bg-gray-50 p-2 rounded">{selectedCatch.notes}</p>
+              </div>
+            )}
+          </div>
+        </InfoWindow>
+      )}
+    </>
+  )
+}
+
+export default function CatchMap({ catches, apiKey, onBoundsChange }: CatchMapProps) {
+  // Beräkna center baserat på fångster
+  const center = catches.length > 0 ? {
+    lat: catches.reduce((sum, c) => sum + c.latitude, 0) / catches.length,
+    lng: catches.reduce((sum, c) => sum + c.longitude, 0) / catches.length
+  } : { lat: 59.3293, lng: 18.0686 } // Stockholm som default
 
   // Marker color function (not used yet but will be for future features)
   // const getMarkerColor = (species: string) => {
@@ -91,94 +195,8 @@ export default function CatchMap({ catches, apiKey, onBoundsChange }: CatchMapPr
           gestureHandling="greedy"
           disableDefaultUI={false}
           mapId="fishlog-map"
-          onCameraChanged={updateVisibleCatches}
-          onTilesLoaded={() => {
-            if (map) updateVisibleCatches()
-          }}
-          onLoad={(mapInstance) => {
-            setMap(mapInstance)
-            // Initial update när kartan laddas
-            setTimeout(() => {
-              if (onBoundsChange) {
-                onBoundsChange(catches)
-              }
-            }, 100)
-          }}
         >
-          {catches.map((catch_item) => (
-            <Marker
-              key={catch_item.id}
-              position={{ lat: catch_item.latitude, lng: catch_item.longitude }}
-              onClick={() => setSelectedCatch(catch_item)}
-              title={`${catch_item.species.name_swedish} - ${catch_item.location_name}`}
-            />
-          ))}
-
-          {selectedCatch && (
-            <InfoWindow
-              position={{ lat: selectedCatch.latitude, lng: selectedCatch.longitude }}
-              onCloseClick={() => setSelectedCatch(null)}
-            >
-              <div className="p-2 max-w-xs bg-white rounded-lg shadow-lg">
-                <h3 className="font-bold text-lg text-gray-900 mb-3">
-                  {selectedCatch.species.name_swedish}
-                </h3>
-
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-700 font-medium">Vikt:</span>
-                    <span className="font-semibold text-gray-900">
-                      {selectedCatch.weight ? `${selectedCatch.weight} kg` : 'Okänd'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-700 font-medium">Längd:</span>
-                    <span className="font-semibold text-gray-900">
-                      {selectedCatch.length ? `${selectedCatch.length} cm` : 'Okänd'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-700 font-medium">Plats:</span>
-                    <span className="font-semibold text-blue-700">{selectedCatch.location_name}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-700 font-medium">Datum:</span>
-                    <span className="font-semibold text-gray-900">
-                      {new Date(selectedCatch.caught_at).toLocaleDateString('sv-SE')}
-                    </span>
-                  </div>
-                  {selectedCatch.weather_data && (
-                    <>
-                      <div className="flex justify-between">
-                        <span className="text-gray-700 font-medium">Väder:</span>
-                        <span className="font-semibold text-green-700">
-                          {selectedCatch.weather_data.temperature}°C, {selectedCatch.weather_data.weather_desc}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-700 font-medium">Vind:</span>
-                        <span className="font-semibold text-gray-900">
-                          {selectedCatch.weather_data.wind_speed} m/s, {selectedCatch.weather_data.wind_direction}°
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-700 font-medium">Lufttryck:</span>
-                        <span className="font-semibold text-gray-900">
-                          {selectedCatch.weather_data.pressure} hPa
-                        </span>
-                      </div>
-                    </>
-                  )}
-                </div>
-
-                {selectedCatch.notes && (
-                  <div className="mt-3 pt-3 border-t border-gray-300">
-                    <p className="text-xs text-gray-800 italic bg-gray-50 p-2 rounded">{selectedCatch.notes}</p>
-                  </div>
-                )}
-              </div>
-            </InfoWindow>
-          )}
+          <MapContent catches={catches} onBoundsChange={onBoundsChange} />
         </Map>
       </APIProvider>
     </div>

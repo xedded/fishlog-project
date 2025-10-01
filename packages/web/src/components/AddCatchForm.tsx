@@ -114,7 +114,7 @@ export default function AddCatchForm({ onSuccess, onCancel, userId }: AddCatchFo
       }
 
       // 3. Insert catch with weather_id reference
-      const { data: catchData, error: catchError } = await supabase
+      const { error: catchError } = await supabase
         .from('catches')
         .insert({
           user_id: userId,
