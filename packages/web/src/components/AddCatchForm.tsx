@@ -69,26 +69,61 @@ export default function AddCatchForm({ onSuccess, onCancel, userId }: AddCatchFo
     e.preventDefault()
     setLoading(true)
 
-    const { error } = await supabase
-      .from('catches')
-      .insert({
-        user_id: userId,
-        species_id: formData.species_id,
-        weight: parseFloat(formData.weight),
-        length: parseFloat(formData.length),
-        latitude: parseFloat(formData.latitude),
-        longitude: parseFloat(formData.longitude),
-        location_name: formData.location_name,
-        caught_at: formData.caught_at,
-        notes: formData.notes || null
-      })
+    try {
+      // 1. Fetch weather data
+      const weatherUrl = `/api/weather?lat=${formData.latitude}&lon=${formData.longitude}&timestamp=${new Date(formData.caught_at).toISOString()}`
+      const weatherResponse = await fetch(weatherUrl)
+      let weatherData = null
 
-    setLoading(false)
+      if (weatherResponse.ok) {
+        weatherData = await weatherResponse.json()
+      } else {
+        console.warn('Could not fetch weather data')
+      }
 
-    if (error) {
-      alert('Fel vid registrering: ' + error.message)
-    } else {
+      // 2. Insert catch
+      const { data: catchData, error: catchError } = await supabase
+        .from('catches')
+        .insert({
+          user_id: userId,
+          species_id: formData.species_id,
+          weight: parseFloat(formData.weight),
+          length: parseFloat(formData.length),
+          latitude: parseFloat(formData.latitude),
+          longitude: parseFloat(formData.longitude),
+          location_name: formData.location_name,
+          caught_at: formData.caught_at,
+          notes: formData.notes || null
+        })
+        .select()
+        .single()
+
+      if (catchError) throw catchError
+
+      // 3. Insert weather data if available
+      if (weatherData && weatherData.temperature !== null && catchData) {
+        const { error: weatherError } = await supabase
+          .from('weather_data')
+          .insert({
+            catch_id: catchData.id,
+            temperature: weatherData.temperature,
+            weather_desc: weatherData.weather_desc,
+            pressure: weatherData.pressure,
+            humidity: weatherData.humidity,
+            wind_speed: weatherData.wind_speed,
+            wind_direction: weatherData.wind_direction
+          })
+
+        if (weatherError) {
+          console.error('Weather data insert error:', weatherError)
+        }
+      }
+
       onSuccess()
+    } catch (error) {
+      alert('Fel vid registrering: ' + (error instanceof Error ? error.message : 'Okänt fel'))
+    } finally {
+      setLoading(false)
     }
   }
 
