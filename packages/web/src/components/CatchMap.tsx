@@ -116,7 +116,7 @@ function MapContent({ catches, onBoundsChange, darkMode }: { catches: CatchData[
           onCloseClick={() => setSelectedCatch(null)}
           headerDisabled
         >
-          <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg p-3 min-w-[250px]`}>
+          <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} p-3 min-w-[250px]`}>
             <h3 className={`font-bold text-base mb-2 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
               {selectedCatch.species.name_swedish}
             </h3>
