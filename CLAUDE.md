@@ -24,7 +24,7 @@ Personlig fiskfångst-app med webb och mobilgränssnitt för att registrera fån
 
 ## Utvecklingsfaser
 
-### Fas 1 - Foundation (vecka 1-2) ← 95% KLAR
+### Fas 1 - Foundation (vecka 1-2) ← 100% KLAR ✅
 - [x] Projektsetup + monorepo
 - [x] Databas-schema + Prisma setup
 - [x] Next.js webb-app initialiserad
@@ -36,17 +36,29 @@ Personlig fiskfångst-app med webb och mobilgränssnitt för att registrera fån
 - [x] Supabase setup dokumentation
 - [x] Supabase projekt deployment + databas setup
 - [x] Testdata i produktionsdatabas
-- [ ] Basic auth implementation
-- [ ] Enkel fångstregistrering
+- [x] **Auth implementation (Supabase Auth + Google OAuth)**
+  - [x] AuthForm med email/lösenord + Google sign-in
+  - [x] useAuth hook för state management
+  - [x] OAuth callback route
+  - [x] Auto-create user profile vid inloggning
+- [x] **Fångstvisning i Dashboard**
+  - [x] Lista fångster med detaljer (art, vikt, längd, plats, väder)
+  - [x] Ladda provdata-funktion
+- [ ] **Fångstregistrering** (pågående)
+  - [ ] Formulär för ny fångst
+  - [ ] Radera fångster
+  - [ ] List/Grid toggle-vy
 
 ### Fas 2 - Core Features (vecka 3-4)
 - [ ] Foto-upload funktionalitet
-- [ ] Väder-API integration
+- [ ] Väder-API integration (auto-fetch vid registrering)
 - [ ] Offline storage (mobil)
 - [ ] Basic sync-mekanism
 
-### Fas 3 - Visualization (vecka 5-6)
-- [ ] Kartvy med fångstpunkter
+### Fas 3 - Visualization (vecka 5-6) ← Delvis klar
+- [x] **Kartvy med fångstpunkter** (Google Maps)
+  - [x] Markers för varje fångst
+  - [x] InfoWindow med fångstdetaljer
 - [ ] Basic statistik och listor
 - [ ] Filtrering på art/datum
 
@@ -83,18 +95,34 @@ fishlog-project/
 - Supabase setup dokumentation
 - **Supabase databas deployment med fullständig testdata**
 - **Environment variables konfigurerade**
+- **Auth implementation komplett:**
+  - Supabase client konfigurerad
+  - AuthForm med email/password + Google OAuth
+  - useAuth hook
+  - OAuth callback route
+  - User profile auto-creation
+- **Dashboard komplett:**
+  - Fångstlista med detaljer
+  - Google Maps integration med markers och InfoWindow
+  - Ladda provdata-funktion
 
 🎯 **Testdata i databas:**
-- 1 testanvändare: test@fishlog.se
+- 1 testanvändare: test@fishlog.se (lösenord: testpassword123)
 - 10 svenska fiskarter (Gädda, Abborre, Öring, Lax, etc.)
 - 5 favoritplatser (Vänern, Vättern, Mörrum, etc.)
 - 6 realistiska fångster med väderdata
 
-🚀 **Nästa steg:**
-1. Implementera Supabase client i Next.js
-2. Skapa auth komponenter (login/signup)
-3. Första fångstregistrerings-formulär
-4. Deploy webb-app till Vercel
+🚧 **Pågående (idag):**
+1. Fångstregistrerings-formulär
+2. Radera fångster-funktion
+3. List/Grid toggle-vy
+4. Deploy till Vercel
+
+🚀 **Nästa steg (efter idag):**
+1. Foto-upload funktionalitet
+2. Väder-API integration (auto-fetch)
+3. Statistik och trendgrafer
+4. Filtrering på art/datum
 5. Koppla mobile app till Supabase
 
 ## Kommandoöversikt

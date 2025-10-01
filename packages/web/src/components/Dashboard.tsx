@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { supabase } from '@/lib/supabase'
 import CatchMap from './CatchMap'
+import AddCatchForm from './AddCatchForm'
 
 interface Catch {
   id: string
@@ -29,6 +30,8 @@ export default function Dashboard() {
   const { user, signOut } = useAuth()
   const [catches, setCatches] = useState<Catch[]>([])
   const [loading, setLoading] = useState(true)
+  const [showAddForm, setShowAddForm] = useState(false)
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [userProfile, setUserProfile] = useState<{
     id: string
     email: string
@@ -71,7 +74,6 @@ export default function Dashboard() {
       console.error('Error fetching catches:', error)
     } else {
       console.log('Fetched catches:', data?.length || 0, 'items')
-      console.log('Catch data:', data)
       setCatches(data || [])
     }
     setLoading(false)
@@ -82,12 +84,6 @@ export default function Dashboard() {
 
     setLoading(true)
     try {
-      console.log('Starting to load sample data for user:', user.id)
-
-      // Skapa provdata direkt istället för att kopiera
-      console.log('Creating sample data directly...')
-
-      // Först, kolla om vi redan har data
       const { data: existingCatches } = await supabase
         .from('catches')
         .select('id')
@@ -99,41 +95,17 @@ export default function Dashboard() {
         return
       }
 
-      // Hitta species först
-      const { data: species, error: speciesError } = await supabase
+      const { data: species } = await supabase
         .from('species')
         .select('*')
         .limit(10)
 
-      if (speciesError || !species || species.length === 0) {
-        alert('Inga fiskarter hittades i databasen. Kör seed-data.sql först.')
+      if (!species || species.length === 0) {
+        alert('Inga fiskarter hittades i databasen.')
         setLoading(false)
         return
       }
 
-      console.log('Found species:', species.length)
-
-      // Skapa favorite locations
-      const sampleLocations = [
-        { name: 'Vänern - Kållandsö', lat: 58.5923, lng: 13.0813, desc: 'Bra gös- och gäddvatten vid Kållandsö' },
-        { name: 'Vättern - Visingsö', lat: 57.9833, lng: 14.3833, desc: 'Öringfiske runt Visingsö' },
-        { name: 'Stockholms skärgård - Sandhamn', lat: 59.2917, lng: 18.9167, desc: 'Havsfiske efter torsk och abborre' }
-      ]
-
-      for (const loc of sampleLocations) {
-        const { error: insertError } = await supabase
-          .from('favorite_locations')
-          .insert({
-            user_id: user.id,
-            name: loc.name,
-            latitude: loc.lat,
-            longitude: loc.lng,
-            description: loc.desc
-          })
-        if (insertError) console.error('Location insert error:', insertError)
-      }
-
-      // Skapa sample catches
       const sampleCatches = [
         { species: 'Gädda', weight: 4.2, length: 68.5, location: 'Vänern - Kållandsö', notes: 'Fantastisk gädda på wobbler vid gräsbänk!' },
         { species: 'Abborre', weight: 0.8, length: 25.3, location: 'Stockholms skärgård - Sandhamn', notes: 'Fin abborre på jig vid stengrund' },
@@ -147,32 +119,24 @@ export default function Dashboard() {
         const catchData = sampleCatches[i]
         const matchingSpecies = species.find(s => s.name_swedish === catchData.species) || species[0]
 
-        const { error: insertError } = await supabase
+        await supabase
           .from('catches')
           .insert({
             user_id: user.id,
             species_id: matchingSpecies.id,
             weight: catchData.weight,
             length: catchData.length,
-            latitude: 58.5923 + (Math.random() - 0.5) * 0.1, // Lägg till lite variation
+            latitude: 58.5923 + (Math.random() - 0.5) * 0.1,
             longitude: 13.0813 + (Math.random() - 0.5) * 0.1,
             location_name: catchData.location,
-            caught_at: new Date(Date.now() - (i * 7 * 24 * 60 * 60 * 1000)).toISOString(), // Vecka mellan varje
+            caught_at: new Date(Date.now() - (i * 7 * 24 * 60 * 60 * 1000)).toISOString(),
             notes: catchData.notes
           })
-        if (insertError) {
-          console.error('Catch insert error:', insertError)
-        } else {
-          console.log('Inserted catch:', catchData.species)
-        }
       }
 
-      console.log('Refreshing catches list...')
-      await fetchCatches() // Uppdatera listan
-
+      await fetchCatches()
       alert('Provdata laddad! 🎣')
     } catch (error) {
-      console.error('Error loading sample data:', error)
       alert('Ett fel uppstod: ' + (error instanceof Error ? error.message : 'Okänt fel'))
     }
     setLoading(false)
@@ -180,6 +144,32 @@ export default function Dashboard() {
 
   const handleSignOut = async () => {
     await signOut()
+  }
+
+  const handleAddCatch = () => {
+    setShowAddForm(true)
+  }
+
+  const handleAddSuccess = () => {
+    setShowAddForm(false)
+    fetchCatches()
+  }
+
+  const handleDeleteCatch = async (catchId: string) => {
+    if (!confirm('Är du säker på att du vill radera denna fångst?')) {
+      return
+    }
+
+    const { error } = await supabase
+      .from('catches')
+      .delete()
+      .eq('id', catchId)
+
+    if (error) {
+      alert('Fel vid radering: ' + error.message)
+    } else {
+      fetchCatches()
+    }
   }
 
   if (loading) {
@@ -225,9 +215,44 @@ export default function Dashboard() {
           )}
 
           <div className="mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
-              📋 Dina fångster ({catches.length})
-            </h2>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold text-gray-900">
+                📋 Dina fångster ({catches.length})
+              </h2>
+              <div className="flex gap-2">
+                {/* View toggle */}
+                {catches.length > 0 && (
+                  <div className="flex bg-gray-200 rounded-md p-1">
+                    <button
+                      onClick={() => setViewMode('grid')}
+                      className={`px-3 py-1 rounded text-sm font-medium ${
+                        viewMode === 'grid'
+                          ? 'bg-white text-gray-900 shadow'
+                          : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    >
+                      Grid
+                    </button>
+                    <button
+                      onClick={() => setViewMode('list')}
+                      className={`px-3 py-1 rounded text-sm font-medium ${
+                        viewMode === 'list'
+                          ? 'bg-white text-gray-900 shadow'
+                          : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    >
+                      Lista
+                    </button>
+                  </div>
+                )}
+                <button
+                  onClick={handleAddCatch}
+                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md font-medium"
+                >
+                  + Ny fångst
+                </button>
+              </div>
+            </div>
 
             {catches.length === 0 ? (
               <div className="text-center py-12">
@@ -235,16 +260,26 @@ export default function Dashboard() {
                 <p className="text-gray-400 mb-4">Börja logga dina fångster!</p>
                 <button
                   onClick={loadSampleData}
-                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md"
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md"
                 >
                   📊 Ladda provdata (6 fångster)
                 </button>
               </div>
-            ) : (
+            ) : viewMode === 'grid' ? (
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {catches.map((catch_item) => (
-                  <div key={catch_item.id} className="bg-white rounded-lg shadow p-6">
-                    <div className="flex justify-between items-start mb-3">
+                  <div key={catch_item.id} className="bg-white rounded-lg shadow p-6 relative">
+                    <button
+                      onClick={() => handleDeleteCatch(catch_item.id)}
+                      className="absolute top-2 right-2 text-red-600 hover:text-red-800 p-2"
+                      title="Radera fångst"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+
+                    <div className="flex justify-between items-start mb-3 pr-8">
                       <h3 className="text-lg font-semibold text-gray-900">
                         {catch_item.species.name_swedish}
                       </h3>
@@ -294,10 +329,67 @@ export default function Dashboard() {
                   </div>
                 ))}
               </div>
+            ) : (
+              <div className="bg-white rounded-lg shadow overflow-hidden">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Art</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vikt</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Längd</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Plats</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Datum</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Väder</th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Åtgärder</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {catches.map((catch_item) => (
+                      <tr key={catch_item.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div>
+                            <div className="text-sm font-medium text-gray-900">{catch_item.species.name_swedish}</div>
+                            <div className="text-sm text-gray-500 italic">{catch_item.species.name_latin}</div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{catch_item.weight} kg</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{catch_item.length} cm</td>
+                        <td className="px-6 py-4 text-sm text-blue-700 font-medium max-w-xs truncate">{catch_item.location_name}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {new Date(catch_item.caught_at).toLocaleDateString('sv-SE')}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-green-700">
+                          {catch_item.weather_data
+                            ? `${catch_item.weather_data.temperature}°C`
+                            : '-'
+                          }
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <button
+                            onClick={() => handleDeleteCatch(catch_item.id)}
+                            className="text-red-600 hover:text-red-900"
+                          >
+                            Radera
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
         </div>
       </main>
+
+      {/* Add Catch Form Modal */}
+      {showAddForm && (
+        <AddCatchForm
+          userId={user?.id || ''}
+          onSuccess={handleAddSuccess}
+          onCancel={() => setShowAddForm(false)}
+        />
+      )}
     </div>
   )
 }
