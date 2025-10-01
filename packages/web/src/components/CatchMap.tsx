@@ -31,9 +31,10 @@ interface CatchMapProps {
   catches: CatchData[]
   apiKey: string
   onBoundsChange?: (visibleCatches: CatchData[]) => void
+  darkMode?: boolean
 }
 
-function MapContent({ catches, onBoundsChange }: { catches: CatchData[], onBoundsChange?: (visibleCatches: CatchData[]) => void }) {
+function MapContent({ catches, onBoundsChange, darkMode }: { catches: CatchData[], onBoundsChange?: (visibleCatches: CatchData[]) => void, darkMode: boolean }) {
   const map = useMap()
   const [selectedCatch, setSelectedCatch] = useState<CatchData | null>(null)
 
@@ -90,51 +91,51 @@ function MapContent({ catches, onBoundsChange }: { catches: CatchData[], onBound
           position={{ lat: selectedCatch.latitude, lng: selectedCatch.longitude }}
           onCloseClick={() => setSelectedCatch(null)}
         >
-          <div className="p-2 max-w-xs bg-white rounded-lg shadow-lg">
-            <h3 className="font-bold text-lg text-gray-900 mb-3">
+          <div className={`p-3 max-w-xs rounded-lg shadow-lg ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+            <h3 className={`font-bold text-lg mb-3 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
               {selectedCatch.species.name_swedish}
             </h3>
 
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-gray-700 font-medium">Vikt:</span>
-                <span className="font-semibold text-gray-900">
+                <span className={`font-medium ${darkMode ? 'text-gray-400' : 'text-gray-700'}`}>Vikt:</span>
+                <span className={`font-semibold ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>
                   {selectedCatch.weight ? `${selectedCatch.weight} kg` : 'Okänd'}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-700 font-medium">Längd:</span>
-                <span className="font-semibold text-gray-900">
+                <span className={`font-medium ${darkMode ? 'text-gray-400' : 'text-gray-700'}`}>Längd:</span>
+                <span className={`font-semibold ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>
                   {selectedCatch.length ? `${selectedCatch.length} cm` : 'Okänd'}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-700 font-medium">Plats:</span>
-                <span className="font-semibold text-blue-700">{selectedCatch.location_name}</span>
+                <span className={`font-medium ${darkMode ? 'text-gray-400' : 'text-gray-700'}`}>Plats:</span>
+                <span className={`font-semibold ${darkMode ? 'text-blue-400' : 'text-blue-700'}`}>{selectedCatch.location_name}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-700 font-medium">Datum:</span>
-                <span className="font-semibold text-gray-900">
+                <span className={`font-medium ${darkMode ? 'text-gray-400' : 'text-gray-700'}`}>Datum:</span>
+                <span className={`font-semibold ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>
                   {new Date(selectedCatch.caught_at).toLocaleDateString('sv-SE')}
                 </span>
               </div>
               {selectedCatch.weather_data && (
                 <>
                   <div className="flex justify-between">
-                    <span className="text-gray-700 font-medium">Väder:</span>
-                    <span className="font-semibold text-green-700">
+                    <span className={`font-medium ${darkMode ? 'text-gray-400' : 'text-gray-700'}`}>Väder:</span>
+                    <span className={`font-semibold ${darkMode ? 'text-green-400' : 'text-green-700'}`}>
                       {selectedCatch.weather_data.temperature}°C, {selectedCatch.weather_data.weather_desc}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-700 font-medium">Vind:</span>
-                    <span className="font-semibold text-gray-900">
-                      {selectedCatch.weather_data.wind_speed} m/s, {selectedCatch.weather_data.wind_direction}°
+                    <span className={`font-medium ${darkMode ? 'text-gray-400' : 'text-gray-700'}`}>Vind:</span>
+                    <span className={`font-semibold ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>
+                      {selectedCatch.weather_data.wind_speed} m/s {degreesToCompass(selectedCatch.weather_data.wind_direction)}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-700 font-medium">Lufttryck:</span>
-                    <span className="font-semibold text-gray-900">
+                    <span className={`font-medium ${darkMode ? 'text-gray-400' : 'text-gray-700'}`}>Lufttryck:</span>
+                    <span className={`font-semibold ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>
                       {selectedCatch.weather_data.pressure} hPa
                     </span>
                   </div>
@@ -143,8 +144,8 @@ function MapContent({ catches, onBoundsChange }: { catches: CatchData[], onBound
             </div>
 
             {selectedCatch.notes && (
-              <div className="mt-3 pt-3 border-t border-gray-300">
-                <p className="text-xs text-gray-800 italic bg-gray-50 p-2 rounded">{selectedCatch.notes}</p>
+              <div className={`mt-3 pt-3 ${darkMode ? 'border-gray-700' : 'border-gray-300'} border-t`}>
+                <p className={`text-xs italic p-2 rounded ${darkMode ? 'text-gray-300 bg-gray-700' : 'text-gray-800 bg-gray-50'}`}>{selectedCatch.notes}</p>
               </div>
             )}
           </div>
@@ -154,7 +155,96 @@ function MapContent({ catches, onBoundsChange }: { catches: CatchData[], onBound
   )
 }
 
-export default function CatchMap({ catches, apiKey, onBoundsChange }: CatchMapProps) {
+// Dark mode map styles
+const darkMapStyles = [
+  { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
+  {
+    featureType: "administrative.locality",
+    elementType: "labels.text.fill",
+    stylers: [{ color: "#d59563" }],
+  },
+  {
+    featureType: "poi",
+    elementType: "labels.text.fill",
+    stylers: [{ color: "#d59563" }],
+  },
+  {
+    featureType: "poi.park",
+    elementType: "geometry",
+    stylers: [{ color: "#263c3f" }],
+  },
+  {
+    featureType: "poi.park",
+    elementType: "labels.text.fill",
+    stylers: [{ color: "#6b9a76" }],
+  },
+  {
+    featureType: "road",
+    elementType: "geometry",
+    stylers: [{ color: "#38414e" }],
+  },
+  {
+    featureType: "road",
+    elementType: "geometry.stroke",
+    stylers: [{ color: "#212a37" }],
+  },
+  {
+    featureType: "road",
+    elementType: "labels.text.fill",
+    stylers: [{ color: "#9ca5b3" }],
+  },
+  {
+    featureType: "road.highway",
+    elementType: "geometry",
+    stylers: [{ color: "#746855" }],
+  },
+  {
+    featureType: "road.highway",
+    elementType: "geometry.stroke",
+    stylers: [{ color: "#1f2835" }],
+  },
+  {
+    featureType: "road.highway",
+    elementType: "labels.text.fill",
+    stylers: [{ color: "#f3d19c" }],
+  },
+  {
+    featureType: "transit",
+    elementType: "geometry",
+    stylers: [{ color: "#2f3948" }],
+  },
+  {
+    featureType: "transit.station",
+    elementType: "labels.text.fill",
+    stylers: [{ color: "#d59563" }],
+  },
+  {
+    featureType: "water",
+    elementType: "geometry",
+    stylers: [{ color: "#17263c" }],
+  },
+  {
+    featureType: "water",
+    elementType: "labels.text.fill",
+    stylers: [{ color: "#515c6d" }],
+  },
+  {
+    featureType: "water",
+    elementType: "labels.text.stroke",
+    stylers: [{ color: "#17263c" }],
+  },
+]
+
+// Convert degrees to compass direction
+const degreesToCompass = (degrees: number): string => {
+  const directions = ['N', 'NNÖ', 'NÖ', 'ÖNÖ', 'Ö', 'ÖSÖ', 'SÖ', 'SSÖ', 'S', 'SSV', 'SV', 'VSV', 'V', 'VNV', 'NV', 'NNV']
+  const index = Math.round(((degrees % 360) / 22.5))
+  return directions[index % 16]
+}
+
+export default function CatchMap({ catches, apiKey, onBoundsChange, darkMode = false }: CatchMapProps) {
   // Beräkna center baserat på fångster
   const center = catches.length > 0 ? {
     lat: catches.reduce((sum, c) => sum + c.latitude, 0) / catches.length,
@@ -195,8 +285,9 @@ export default function CatchMap({ catches, apiKey, onBoundsChange }: CatchMapPr
           gestureHandling="greedy"
           disableDefaultUI={false}
           mapId="fishlog-map"
+          styles={darkMode ? darkMapStyles : undefined}
         >
-          <MapContent catches={catches} onBoundsChange={onBoundsChange} />
+          <MapContent catches={catches} onBoundsChange={onBoundsChange} darkMode={darkMode} />
         </Map>
       </APIProvider>
     </div>

@@ -14,9 +14,10 @@ interface AddCatchFormProps {
   onSuccess: () => void
   onCancel: () => void
   userId: string
+  darkMode?: boolean
 }
 
-export default function AddCatchForm({ onSuccess, onCancel, userId }: AddCatchFormProps) {
+export default function AddCatchForm({ onSuccess, onCancel, userId, darkMode = false }: AddCatchFormProps) {
   const [species, setSpecies] = useState<Species[]>([])
   const [loading, setLoading] = useState(false)
   const [useMapPicker, setUseMapPicker] = useState(false)
@@ -143,21 +144,21 @@ export default function AddCatchForm({ onSuccess, onCancel, userId }: AddCatchFo
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto`}>
         <div className="p-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Registrera ny fångst</h2>
+          <h2 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-6`}>Registrera ny fångst</h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Art */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
                 Fiskart *
               </label>
               <select
                 required
                 value={formData.species_id}
                 onChange={(e) => setFormData({ ...formData, species_id: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
               >
                 <option value="">Välj art...</option>
                 {species.map((s) => (
@@ -171,7 +172,7 @@ export default function AddCatchForm({ onSuccess, onCancel, userId }: AddCatchFo
             {/* Vikt och Längd */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
                   Vikt (kg)
                 </label>
                 <input
@@ -179,12 +180,12 @@ export default function AddCatchForm({ onSuccess, onCancel, userId }: AddCatchFo
                   step="0.01"
                   value={formData.weight}
                   onChange={(e) => setFormData({ ...formData, weight: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 text-gray-900'}`}
                   placeholder="2.5 (eller lämna tom för okänd)"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
                   Längd (cm)
                 </label>
                 <input
@@ -192,7 +193,7 @@ export default function AddCatchForm({ onSuccess, onCancel, userId }: AddCatchFo
                   step="0.1"
                   value={formData.length}
                   onChange={(e) => setFormData({ ...formData, length: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 text-gray-900'}`}
                   placeholder="45.5 (eller lämna tom för okänd)"
                 />
               </div>
@@ -200,7 +201,7 @@ export default function AddCatchForm({ onSuccess, onCancel, userId }: AddCatchFo
 
             {/* Platsnamn */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
                 Plats *
               </label>
               <input
@@ -208,7 +209,7 @@ export default function AddCatchForm({ onSuccess, onCancel, userId }: AddCatchFo
                 required
                 value={formData.location_name}
                 onChange={(e) => setFormData({ ...formData, location_name: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 text-gray-900'}`}
                 placeholder="Vänern - Kållandsö"
               />
             </div>
@@ -216,13 +217,13 @@ export default function AddCatchForm({ onSuccess, onCancel, userId }: AddCatchFo
             {/* Platsväljare */}
             <div>
               <div className="flex items-center gap-3 mb-2">
-                <label className="text-sm font-medium text-gray-700">
+                <label className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                   Position:
                 </label>
                 <button
                   type="button"
                   onClick={() => setUseMapPicker(!useMapPicker)}
-                  className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                  className={`text-sm font-medium ${darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'}`}
                 >
                   {useMapPicker ? '📍 Använd automatisk plats' : '🗺️ Välj på karta'}
                 </button>
@@ -260,14 +261,14 @@ export default function AddCatchForm({ onSuccess, onCancel, userId }: AddCatchFo
                       </Map>
                     </div>
                   </APIProvider>
-                  <p className="text-xs text-gray-600 mt-1">Klicka på kartan för att välja position</p>
+                  <p className={`text-xs mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Klicka på kartan för att välja position</p>
                 </div>
               )}
 
               {/* Koordinater (visas alltid, disabled om map picker används) */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">
+                  <label className={`block text-xs font-medium ${darkMode ? 'text-gray-400' : 'text-gray-600'} mb-1`}>
                     Latitud *
                   </label>
                   <input
@@ -277,12 +278,12 @@ export default function AddCatchForm({ onSuccess, onCancel, userId }: AddCatchFo
                     value={formData.latitude}
                     onChange={(e) => setFormData({ ...formData, latitude: e.target.value })}
                     disabled={useMapPicker}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 disabled:bg-gray-100 disabled:text-gray-600"
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${darkMode ? 'bg-gray-700 border-gray-600 text-white disabled:bg-gray-600 disabled:text-gray-500' : 'bg-white border-gray-300 text-gray-900 disabled:bg-gray-100 disabled:text-gray-600'}`}
                     placeholder="59.329323"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">
+                  <label className={`block text-xs font-medium ${darkMode ? 'text-gray-400' : 'text-gray-600'} mb-1`}>
                     Longitud *
                   </label>
                   <input
@@ -292,7 +293,7 @@ export default function AddCatchForm({ onSuccess, onCancel, userId }: AddCatchFo
                     value={formData.longitude}
                     onChange={(e) => setFormData({ ...formData, longitude: e.target.value })}
                     disabled={useMapPicker}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 disabled:bg-gray-100 disabled:text-gray-600"
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${darkMode ? 'bg-gray-700 border-gray-600 text-white disabled:bg-gray-600 disabled:text-gray-500' : 'bg-white border-gray-300 text-gray-900 disabled:bg-gray-100 disabled:text-gray-600'}`}
                     placeholder="18.068581"
                   />
                 </div>
@@ -301,7 +302,7 @@ export default function AddCatchForm({ onSuccess, onCancel, userId }: AddCatchFo
 
             {/* Datum och tid */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
                 Datum och tid *
               </label>
               <input
@@ -309,20 +310,20 @@ export default function AddCatchForm({ onSuccess, onCancel, userId }: AddCatchFo
                 required
                 value={formData.caught_at}
                 onChange={(e) => setFormData({ ...formData, caught_at: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
               />
             </div>
 
             {/* Anteckningar */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
                 Anteckningar
               </label>
               <textarea
                 value={formData.notes}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 text-gray-900'}`}
                 placeholder="Bra fiske med wobbler vid gräsbänk..."
               />
             </div>
