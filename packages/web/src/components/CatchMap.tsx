@@ -1,8 +1,8 @@
 'use client'
 
-import { APIProvider, Map, AdvancedMarker, useMap } from '@vis.gl/react-google-maps'
+import { APIProvider, Map, AdvancedMarker, InfoWindow, useMap } from '@vis.gl/react-google-maps'
 import { useState, useEffect } from 'react'
-import { Fish, X } from 'lucide-react'
+import { Fish } from 'lucide-react'
 
 interface CatchData {
   id: string
@@ -111,85 +111,64 @@ function MapContent({ catches, onBoundsChange, darkMode }: { catches: CatchData[
       ))}
 
       {selectedCatch && (
-        <AdvancedMarker
+        <InfoWindow
           position={{ lat: selectedCatch.latitude, lng: selectedCatch.longitude }}
-          zIndex={1000}
+          onCloseClick={() => setSelectedCatch(null)}
+          headerDisabled
         >
-          <div
-            className={`relative ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-lg shadow-2xl border-2 min-w-[280px] max-w-xs`}
-            style={{
-              transform: 'translate(-50%, -100%)',
-              marginTop: '-20px'
-            }}
-          >
-            {/* Close button */}
-            <button
-              onClick={() => setSelectedCatch(null)}
-              className={`absolute top-2 right-2 p-1 rounded-full ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'} transition-colors`}
-            >
-              <X className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`} />
-            </button>
+          <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg p-3 min-w-[250px]`}>
+            <h3 className={`font-bold text-base mb-2 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+              {selectedCatch.species.name_swedish}
+            </h3>
 
-            <div className="p-3">
-              <h3 className={`font-bold text-base mb-2 pr-6 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                {selectedCatch.species.name_swedish}
-              </h3>
-
-              <div className="space-y-1.5 text-xs">
-                <div className="flex justify-between">
-                  <span className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Vikt:</span>
-                  <span className={`font-semibold ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>
-                    {selectedCatch.weight ? `${selectedCatch.weight} kg` : 'Okänd'}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Längd:</span>
-                  <span className={`font-semibold ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>
-                    {selectedCatch.length ? `${selectedCatch.length} cm` : 'Okänd'}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Plats:</span>
-                  <span className={`font-semibold ${darkMode ? 'text-blue-400' : 'text-blue-700'}`}>{selectedCatch.location_name}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Datum:</span>
-                  <span className={`font-semibold ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>
-                    {new Date(selectedCatch.caught_at).toLocaleDateString('sv-SE')}
-                  </span>
-                </div>
-                {selectedCatch.weather_data && (
-                  <>
-                    <div className="flex justify-between">
-                      <span className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Väder:</span>
-                      <span className={`font-semibold ${darkMode ? 'text-green-400' : 'text-green-700'}`}>
-                        {selectedCatch.weather_data.temperature}°C, {selectedCatch.weather_data.weather_desc}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Vind:</span>
-                      <span className={`font-semibold ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>
-                        {selectedCatch.weather_data.wind_speed} m/s {degreesToCompass(selectedCatch.weather_data.wind_direction)}
-                      </span>
-                    </div>
-                  </>
-                )}
+            <div className="space-y-1.5 text-xs">
+              <div className="flex justify-between gap-3">
+                <span className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Vikt:</span>
+                <span className={`font-semibold ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>
+                  {selectedCatch.weight ? `${selectedCatch.weight} kg` : 'Okänd'}
+                </span>
               </div>
-
-              {selectedCatch.notes && (
-                <div className={`mt-2 pt-2 ${darkMode ? 'border-gray-700' : 'border-gray-300'} border-t`}>
-                  <p className={`text-xs italic ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{selectedCatch.notes}</p>
-                </div>
+              <div className="flex justify-between gap-3">
+                <span className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Längd:</span>
+                <span className={`font-semibold ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>
+                  {selectedCatch.length ? `${selectedCatch.length} cm` : 'Okänd'}
+                </span>
+              </div>
+              <div className="flex justify-between gap-3">
+                <span className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Plats:</span>
+                <span className={`font-semibold ${darkMode ? 'text-blue-400' : 'text-blue-700'}`}>{selectedCatch.location_name}</span>
+              </div>
+              <div className="flex justify-between gap-3">
+                <span className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Datum:</span>
+                <span className={`font-semibold ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>
+                  {new Date(selectedCatch.caught_at).toLocaleDateString('sv-SE')}
+                </span>
+              </div>
+              {selectedCatch.weather_data && (
+                <>
+                  <div className="flex justify-between gap-3">
+                    <span className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Väder:</span>
+                    <span className={`font-semibold ${darkMode ? 'text-green-400' : 'text-green-700'}`}>
+                      {selectedCatch.weather_data.temperature}°C, {selectedCatch.weather_data.weather_desc}
+                    </span>
+                  </div>
+                  <div className="flex justify-between gap-3">
+                    <span className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Vind:</span>
+                    <span className={`font-semibold ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>
+                      {selectedCatch.weather_data.wind_speed} m/s {degreesToCompass(selectedCatch.weather_data.wind_direction)}
+                    </span>
+                  </div>
+                </>
               )}
             </div>
 
-            {/* Arrow pointing down */}
-            <div
-              className={`absolute left-1/2 -translate-x-1/2 w-3 h-3 rotate-45 ${darkMode ? 'bg-gray-800 border-r-2 border-b-2 border-gray-700' : 'bg-white border-r-2 border-b-2 border-gray-200'}`}
-              style={{ bottom: '-7px' }}
-            />
+            {selectedCatch.notes && (
+              <div className={`mt-2 pt-2 ${darkMode ? 'border-gray-700' : 'border-gray-300'} border-t`}>
+                <p className={`text-xs italic ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{selectedCatch.notes}</p>
+              </div>
+            )}
           </div>
-        </AdvancedMarker>
+        </InfoWindow>
       )}
     </>
   )
