@@ -37,12 +37,18 @@ export default function AddCatchForm({ onSuccess, onCancel, userId, darkMode = f
     // Försök hämta nuvarande position
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        (position) => {
+        async (position) => {
+          const lat = position.coords.latitude.toFixed(6)
+          const lon = position.coords.longitude.toFixed(6)
+
           setFormData(prev => ({
             ...prev,
-            latitude: position.coords.latitude.toFixed(6),
-            longitude: position.coords.longitude.toFixed(6)
+            latitude: lat,
+            longitude: lon
           }))
+
+          // Hämta platsnamn från koordinater
+          await fetchLocationName(parseFloat(lat), parseFloat(lon))
         },
         (error) => {
           console.log('Geolocation error:', error)
@@ -56,6 +62,42 @@ export default function AddCatchForm({ onSuccess, onCancel, userId, darkMode = f
       )
     }
   }, [])
+
+  const fetchLocationName = async (lat: number, lon: number) => {
+    try {
+      // Använd Google Maps Geocoding API
+      const response = await fetch(
+        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lon}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&language=sv&result_type=natural_feature|locality|administrative_area_level_2`
+      )
+      const data = await response.json()
+
+      if (data.results && data.results.length > 0) {
+        // Prioritera: sjö/naturlig feature > ort > kommun
+        const result = data.results[0]
+        const components = result.address_components
+
+        // Kolla efter sjö/naturlig feature
+        const naturalFeature = components.find((c: any) =>
+          c.types.includes('natural_feature') || c.types.includes('establishment')
+        )
+
+        // Kolla efter ort
+        const locality = components.find((c: any) => c.types.includes('locality'))
+
+        // Kolla efter kommun
+        const adminArea = components.find((c: any) => c.types.includes('administrative_area_level_2'))
+
+        const locationName = naturalFeature?.long_name || locality?.long_name || adminArea?.long_name || result.formatted_address
+
+        setFormData(prev => ({
+          ...prev,
+          location_name: locationName
+        }))
+      }
+    } catch (error) {
+      console.error('Failed to fetch location name:', error)
+    }
+  }
 
   const fetchSpecies = async () => {
     const { data } = await supabase
@@ -132,11 +174,16 @@ export default function AddCatchForm({ onSuccess, onCancel, userId, darkMode = f
         .select()
         .single()
 
-      if (catchError) throw catchError
+      if (catchError) {
+        console.error('Catch insert error:', catchError)
+        throw new Error(catchError.message || 'Kunde inte spara fångsten')
+      }
 
       onSuccess()
     } catch (error) {
-      alert('Fel vid registrering: ' + (error instanceof Error ? error.message : 'Okänt fel'))
+      console.error('Full error:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Okänt fel'
+      alert('Fel vid registrering: ' + errorMessage + '\n\nKontrollera att alla fält är korrekt ifyllda.')
     } finally {
       setLoading(false)
     }
@@ -240,13 +287,19 @@ export default function AddCatchForm({ onSuccess, onCancel, userId, darkMode = f
                         }}
                         defaultZoom={6}
                         mapId="add-catch-map"
-                        onClick={(e) => {
+                        onClick={async (e) => {
                           if (e.detail.latLng) {
+                            const lat = e.detail.latLng.lat
+                            const lon = e.detail.latLng.lng
+
                             setFormData({
                               ...formData,
-                              latitude: e.detail.latLng.lat.toFixed(6),
-                              longitude: e.detail.latLng.lng.toFixed(6)
+                              latitude: lat.toFixed(6),
+                              longitude: lon.toFixed(6)
                             })
+
+                            // Hämta platsnamn för den nya platsen
+                            await fetchLocationName(lat, lon)
                           }
                         }}
                       >
@@ -265,39 +318,9 @@ export default function AddCatchForm({ onSuccess, onCancel, userId, darkMode = f
                 </div>
               )}
 
-              {/* Koordinater (visas alltid, disabled om map picker används) */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className={`block text-xs font-medium ${darkMode ? 'text-gray-400' : 'text-gray-600'} mb-1`}>
-                    Latitud *
-                  </label>
-                  <input
-                    type="number"
-                    step="0.000001"
-                    required
-                    value={formData.latitude}
-                    onChange={(e) => setFormData({ ...formData, latitude: e.target.value })}
-                    disabled={useMapPicker}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${darkMode ? 'bg-gray-700 border-gray-600 text-white disabled:bg-gray-600 disabled:text-gray-500' : 'bg-white border-gray-300 text-gray-900 disabled:bg-gray-100 disabled:text-gray-600'}`}
-                    placeholder="59.329323"
-                  />
-                </div>
-                <div>
-                  <label className={`block text-xs font-medium ${darkMode ? 'text-gray-400' : 'text-gray-600'} mb-1`}>
-                    Longitud *
-                  </label>
-                  <input
-                    type="number"
-                    step="0.000001"
-                    required
-                    value={formData.longitude}
-                    onChange={(e) => setFormData({ ...formData, longitude: e.target.value })}
-                    disabled={useMapPicker}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${darkMode ? 'bg-gray-700 border-gray-600 text-white disabled:bg-gray-600 disabled:text-gray-500' : 'bg-white border-gray-300 text-gray-900 disabled:bg-gray-100 disabled:text-gray-600'}`}
-                    placeholder="18.068581"
-                  />
-                </div>
-              </div>
+              {/* Koordinater (dolda) */}
+              <input type="hidden" value={formData.latitude} />
+              <input type="hidden" value={formData.longitude} />
             </div>
 
             {/* Datum och tid */}
