@@ -23,6 +23,10 @@ interface Catch {
   weather_data?: {
     temperature: number
     weather_desc: string
+    wind_speed: number
+    wind_direction: number
+    pressure: number
+    humidity: number
   }
 }
 
@@ -32,6 +36,10 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [showAddForm, setShowAddForm] = useState(false)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+  const [darkMode, setDarkMode] = useState(false)
+  const [sortBy, setSortBy] = useState<'date' | 'species' | 'weight' | 'length'>('date')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
+  const [visibleCatches, setVisibleCatches] = useState<Catch[]>([])
   const [userProfile, setUserProfile] = useState<{
     id: string
     email: string
@@ -65,7 +73,7 @@ export default function Dashboard() {
       .select(`
         *,
         species (name_swedish, name_latin, category),
-        weather_data (temperature, weather_desc)
+        weather_data (temperature, weather_desc, wind_speed, wind_direction, pressure, humidity)
       `)
       .eq('user_id', user?.id)
       .order('caught_at', { ascending: false })
@@ -210,6 +218,7 @@ export default function Dashboard() {
               <CatchMap
                 catches={catches}
                 apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ''}
+                onBoundsChange={setVisibleCatches}
               />
             </div>
           )}
@@ -217,7 +226,7 @@ export default function Dashboard() {
           <div className="mb-6">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-2xl font-bold text-gray-900">
-                📋 Dina fångster ({catches.length})
+                📋 Synliga fångster ({visibleCatches.length > 0 ? visibleCatches.length : catches.length})
               </h2>
               <div className="flex gap-2">
                 {/* View toggle */}
@@ -267,7 +276,7 @@ export default function Dashboard() {
               </div>
             ) : viewMode === 'grid' ? (
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {catches.map((catch_item) => (
+                {(visibleCatches.length > 0 ? visibleCatches : catches).map((catch_item) => (
                   <div key={catch_item.id} className="bg-white rounded-lg shadow p-6 relative">
                     <button
                       onClick={() => handleDeleteCatch(catch_item.id)}
@@ -307,12 +316,26 @@ export default function Dashboard() {
                         </span>
                       </div>
                       {catch_item.weather_data && (
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-700 font-medium">Väder:</span>
-                          <span className="text-green-700 font-semibold">
-                            {catch_item.weather_data.temperature}°C, {catch_item.weather_data.weather_desc}
-                          </span>
-                        </div>
+                        <>
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-700 font-medium">Väder:</span>
+                            <span className="text-green-700 font-semibold">
+                              {catch_item.weather_data.temperature}°C, {catch_item.weather_data.weather_desc}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-700 font-medium">Vind:</span>
+                            <span className="text-gray-900 font-semibold">
+                              {catch_item.weather_data.wind_speed} m/s, {catch_item.weather_data.wind_direction}°
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-700 font-medium">Lufttryck:</span>
+                            <span className="text-gray-900 font-semibold">
+                              {catch_item.weather_data.pressure} hPa
+                            </span>
+                          </div>
+                        </>
                       )}
                     </div>
 
@@ -339,7 +362,7 @@ export default function Dashboard() {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {catches.map((catch_item) => (
+                    {(visibleCatches.length > 0 ? visibleCatches : catches).map((catch_item) => (
                       <tr key={catch_item.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">{catch_item.species.name_swedish}</div>

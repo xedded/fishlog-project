@@ -18,6 +18,10 @@ interface CatchData {
   weather_data?: {
     temperature: number
     weather_desc: string
+    wind_speed: number
+    wind_direction: number
+    pressure: number
+    humidity: number
   }
   notes?: string
 }
@@ -25,16 +29,33 @@ interface CatchData {
 interface CatchMapProps {
   catches: CatchData[]
   apiKey: string
+  onBoundsChange?: (visibleCatches: CatchData[]) => void
 }
 
-export default function CatchMap({ catches, apiKey }: CatchMapProps) {
+export default function CatchMap({ catches, apiKey, onBoundsChange }: CatchMapProps) {
   const [selectedCatch, setSelectedCatch] = useState<CatchData | null>(null)
+  const [map, setMap] = useState<google.maps.Map | null>(null)
 
   // Beräkna center baserat på fångster
   const center = catches.length > 0 ? {
     lat: catches.reduce((sum, c) => sum + c.latitude, 0) / catches.length,
     lng: catches.reduce((sum, c) => sum + c.longitude, 0) / catches.length
   } : { lat: 59.3293, lng: 18.0686 } // Stockholm som default
+
+  // Funktion för att kolla vilka fångster som är synliga
+  const updateVisibleCatches = () => {
+    if (!map || !onBoundsChange) return
+
+    const bounds = map.getBounds()
+    if (!bounds) return
+
+    const visibleCatches = catches.filter(catch_item => {
+      const pos = new google.maps.LatLng(catch_item.latitude, catch_item.longitude)
+      return bounds.contains(pos)
+    })
+
+    onBoundsChange(visibleCatches)
+  }
 
   // Marker color function (not used yet but will be for future features)
   // const getMarkerColor = (species: string) => {
@@ -70,6 +91,19 @@ export default function CatchMap({ catches, apiKey }: CatchMapProps) {
           gestureHandling="greedy"
           disableDefaultUI={false}
           mapId="fishlog-map"
+          onCameraChanged={updateVisibleCatches}
+          onTilesLoaded={() => {
+            if (map) updateVisibleCatches()
+          }}
+          onLoad={(mapInstance) => {
+            setMap(mapInstance)
+            // Initial update när kartan laddas
+            setTimeout(() => {
+              if (onBoundsChange) {
+                onBoundsChange(catches)
+              }
+            }, 100)
+          }}
         >
           {catches.map((catch_item) => (
             <Marker
@@ -114,12 +148,26 @@ export default function CatchMap({ catches, apiKey }: CatchMapProps) {
                     </span>
                   </div>
                   {selectedCatch.weather_data && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-700 font-medium">Väder:</span>
-                      <span className="font-semibold text-green-700">
-                        {selectedCatch.weather_data.temperature}°C, {selectedCatch.weather_data.weather_desc}
-                      </span>
-                    </div>
+                    <>
+                      <div className="flex justify-between">
+                        <span className="text-gray-700 font-medium">Väder:</span>
+                        <span className="font-semibold text-green-700">
+                          {selectedCatch.weather_data.temperature}°C, {selectedCatch.weather_data.weather_desc}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-700 font-medium">Vind:</span>
+                        <span className="font-semibold text-gray-900">
+                          {selectedCatch.weather_data.wind_speed} m/s, {selectedCatch.weather_data.wind_direction}°
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-700 font-medium">Lufttryck:</span>
+                        <span className="font-semibold text-gray-900">
+                          {selectedCatch.weather_data.pressure} hPa
+                        </span>
+                      </div>
+                    </>
                   )}
                 </div>
 
