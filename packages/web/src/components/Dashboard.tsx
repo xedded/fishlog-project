@@ -278,6 +278,7 @@ export default function Dashboard() {
   const handleGenerateDemo = async () => {
     if (!user) return
 
+    console.log('Starting demo generation for user:', user.id)
     setLoading(true)
     try {
       const response = await fetch('/api/generate-demo', {
@@ -286,15 +287,19 @@ export default function Dashboard() {
         body: JSON.stringify({ userId: user.id })
       })
 
+      console.log('Response status:', response.status)
       const data = await response.json()
+      console.log('Response data:', data)
 
       if (response.ok) {
         alert(`${data.count} demofångster har genererats!`)
         fetchCatches()
       } else {
+        console.error('Generation error:', data)
         alert('Fel vid generering: ' + (data.error || 'Okänt fel'))
       }
     } catch (error) {
+      console.error('Fetch error:', error)
       alert('Fel vid generering: ' + (error instanceof Error ? error.message : 'Okänt fel'))
     } finally {
       setLoading(false)
