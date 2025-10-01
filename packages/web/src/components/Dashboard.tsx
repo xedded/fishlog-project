@@ -5,6 +5,25 @@ import { useAuth } from '@/hooks/useAuth'
 import { supabase } from '@/lib/supabase'
 import CatchMap from './CatchMap'
 import AddCatchForm from './AddCatchForm'
+import {
+  Sun,
+  Moon,
+  LogOut,
+  Plus,
+  Grid3x3,
+  List,
+  ArrowUpDown,
+  MapPin,
+  Calendar,
+  Ruler,
+  Weight,
+  Trash2,
+  Fish,
+  Wind,
+  Gauge,
+  StickyNote,
+  CloudRain
+} from 'lucide-react'
 
 interface Catch {
   id: string
@@ -212,28 +231,32 @@ export default function Dashboard() {
 
   return (
     <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
-      <header className={`${darkMode ? 'bg-gray-800' : 'bg-white'} shadow`}>
+      <header className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border-b`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div>
-              <h1 className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>🎣 FishLog</h1>
-              <p className={darkMode ? 'text-gray-300' : 'text-gray-600'}>
-                Välkommen, {userProfile?.profile_name || user?.user_metadata?.full_name || user?.email}
-              </p>
+          <div className="flex justify-between items-center py-4">
+            <div className="flex items-center gap-3">
+              <Fish className={`w-8 h-8 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`} />
+              <div>
+                <h1 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>FishLog</h1>
+                <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                  {userProfile?.profile_name || user?.user_metadata?.full_name || user?.email}
+                </p>
+              </div>
             </div>
-            <div className="flex gap-3 items-center">
+            <div className="flex gap-2 items-center">
               <button
                 onClick={() => setDarkMode(!darkMode)}
-                className={`${darkMode ? 'bg-gray-700 text-yellow-400' : 'bg-gray-200 text-gray-700'} hover:opacity-80 px-4 py-2 rounded-md font-medium`}
+                className={`${darkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'} p-2 rounded-lg transition-colors`}
                 title={darkMode ? 'Ljust läge' : 'Mörkt läge'}
               >
-                {darkMode ? '☀️' : '🌙'}
+                {darkMode ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5 text-gray-600" />}
               </button>
               <button
                 onClick={handleSignOut}
-                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md"
+                className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors"
               >
-                Logga ut
+                <LogOut className="w-4 h-4" />
+                <span className="hidden sm:inline">Logga ut</span>
               </button>
             </div>
           </div>
@@ -245,9 +268,12 @@ export default function Dashboard() {
           {/* Karta */}
           {catches.length > 0 && (
             <div className="mb-8">
-              <h2 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-4`}>
-                🗺️ Fångstplatser
-              </h2>
+              <div className="flex items-center gap-2 mb-4">
+                <MapPin className={`w-6 h-6 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`} />
+                <h2 className={`text-xl font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                  Fångstplatser
+                </h2>
+              </div>
               <CatchMap
                 catches={catches}
                 apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ''}
@@ -257,18 +283,24 @@ export default function Dashboard() {
           )}
 
           <div className="mb-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                📋 Synliga fångster ({visibleCatches.length > 0 ? visibleCatches.length : catches.length})
-              </h2>
-              <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+              <div className="flex items-center gap-2">
+                <List className={`w-6 h-6 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`} />
+                <h2 className={`text-xl font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                  Fångster
+                  <span className={`ml-2 text-sm font-normal ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                    ({visibleCatches.length > 0 ? visibleCatches.length : catches.length})
+                  </span>
+                </h2>
+              </div>
+              <div className="flex flex-wrap gap-2">
                 {/* Sorting controls */}
                 {catches.length > 0 && (
                   <div className="flex gap-2 items-center">
                     <select
                       value={sortBy}
                       onChange={(e) => setSortBy(e.target.value as 'date' | 'species' | 'weight' | 'length')}
-                      className={`px-3 py-2 rounded-md text-sm font-medium ${darkMode ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-900'}`}
+                      className={`px-3 py-2 rounded-lg text-sm border ${darkMode ? 'bg-gray-700 text-white border-gray-600' : 'bg-white text-gray-900 border-gray-300'} focus:outline-none focus:ring-2 focus:ring-blue-500`}
                     >
                       <option value="date">Datum</option>
                       <option value="species">Art</option>
@@ -277,43 +309,46 @@ export default function Dashboard() {
                     </select>
                     <button
                       onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-                      className={`px-3 py-2 rounded-md text-sm font-medium ${darkMode ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-900'}`}
+                      className={`p-2 rounded-lg border ${darkMode ? 'bg-gray-700 text-white border-gray-600 hover:bg-gray-600' : 'bg-white text-gray-900 border-gray-300 hover:bg-gray-50'} transition-colors`}
                       title={sortOrder === 'asc' ? 'Stigande' : 'Fallande'}
                     >
-                      {sortOrder === 'asc' ? '↑' : '↓'}
+                      <ArrowUpDown className={`w-4 h-4 ${sortOrder === 'desc' ? 'rotate-180' : ''} transition-transform`} />
                     </button>
                   </div>
                 )}
                 {/* View toggle */}
                 {catches.length > 0 && (
-                  <div className={`flex ${darkMode ? 'bg-gray-700' : 'bg-gray-200'} rounded-md p-1`}>
+                  <div className={`flex ${darkMode ? 'bg-gray-700' : 'bg-gray-200'} rounded-lg p-1`}>
                     <button
                       onClick={() => setViewMode('grid')}
-                      className={`px-3 py-1 rounded text-sm font-medium ${
+                      className={`p-2 rounded-md transition-colors ${
                         viewMode === 'grid'
                           ? `${darkMode ? 'bg-gray-600 text-white' : 'bg-white text-gray-900'} shadow`
-                          : `${darkMode ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`
+                          : `${darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`
                       }`}
+                      title="Gridvy"
                     >
-                      Grid
+                      <Grid3x3 className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => setViewMode('list')}
-                      className={`px-3 py-1 rounded text-sm font-medium ${
+                      className={`p-2 rounded-md transition-colors ${
                         viewMode === 'list'
                           ? `${darkMode ? 'bg-gray-600 text-white' : 'bg-white text-gray-900'} shadow`
-                          : `${darkMode ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`
+                          : `${darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`
                       }`}
+                      title="Listvy"
                     >
-                      Lista
+                      <List className="w-4 h-4" />
                     </button>
                   </div>
                 )}
                 <button
                   onClick={handleAddCatch}
-                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md font-medium"
+                  className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
                 >
-                  + Ny fångst
+                  <Plus className="w-4 h-4" />
+                  Ny fångst
                 </button>
               </div>
             </div>
@@ -330,63 +365,78 @@ export default function Dashboard() {
                 </button>
               </div>
             ) : viewMode === 'grid' ? (
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {sortCatches(visibleCatches.length > 0 ? visibleCatches : catches).map((catch_item) => (
-                  <div key={catch_item.id} className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow p-6 relative`}>
+                  <div key={catch_item.id} className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-xl border shadow-sm hover:shadow-md transition-shadow p-5 relative`}>
                     <button
                       onClick={() => handleDeleteCatch(catch_item.id)}
-                      className="absolute top-2 right-2 text-red-600 hover:text-red-800 p-2"
+                      className="absolute top-3 right-3 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 p-1.5 rounded-lg transition-colors"
                       title="Radera fångst"
                     >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
+                      <Trash2 className="w-4 h-4" />
                     </button>
 
-                    <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'} mb-4 pr-8`}>
-                      {catch_item.species.name_swedish}
-                    </h3>
+                    <div className="flex items-center gap-2 mb-4 pr-8">
+                      <Fish className={`w-5 h-5 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`} />
+                      <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                        {catch_item.species.name_swedish}
+                      </h3>
+                    </div>
 
-                    <div className="space-y-3 text-sm">
-                      <div className="flex justify-between items-center">
-                        <span className={`${darkMode ? 'text-gray-300' : 'text-gray-700'} font-medium`}>Vikt:</span>
-                        <span className={`${darkMode ? 'text-gray-100' : 'text-gray-900'} font-semibold`}>
+                    <div className="space-y-2.5 text-sm">
+                      <div className="flex items-center gap-2">
+                        <Weight className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+                        <span className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Vikt:</span>
+                        <span className={`ml-auto ${darkMode ? 'text-gray-100' : 'text-gray-900'} font-medium`}>
                           {catch_item.weight ? `${catch_item.weight} kg` : 'Okänd'}
                         </span>
                       </div>
-                      <div className="flex justify-between items-center">
-                        <span className={`${darkMode ? 'text-gray-300' : 'text-gray-700'} font-medium`}>Längd:</span>
-                        <span className={`${darkMode ? 'text-gray-100' : 'text-gray-900'} font-semibold`}>
+                      <div className="flex items-center gap-2">
+                        <Ruler className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+                        <span className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Längd:</span>
+                        <span className={`ml-auto ${darkMode ? 'text-gray-100' : 'text-gray-900'} font-medium`}>
                           {catch_item.length ? `${catch_item.length} cm` : 'Okänd'}
                         </span>
                       </div>
-                      <div className="flex justify-between items-center">
-                        <span className={`${darkMode ? 'text-gray-300' : 'text-gray-700'} font-medium`}>Plats:</span>
-                        <span className={`${darkMode ? 'text-blue-400' : 'text-blue-700'} font-semibold text-right max-w-[60%]`}>{catch_item.location_name}</span>
+                      <div className="flex items-center gap-2">
+                        <MapPin className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+                        <span className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Plats:</span>
+                        <span className={`ml-auto ${darkMode ? 'text-blue-400' : 'text-blue-600'} font-medium text-right max-w-[60%] truncate`}>
+                          {catch_item.location_name}
+                        </span>
                       </div>
-                      <div className="flex justify-between items-center">
-                        <span className={`${darkMode ? 'text-gray-300' : 'text-gray-700'} font-medium`}>Datum:</span>
-                        <span className={`${darkMode ? 'text-gray-100' : 'text-gray-900'} font-semibold`}>
+                      <div className="flex items-center gap-2">
+                        <Calendar className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+                        <span className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Datum:</span>
+                        <span className={`ml-auto ${darkMode ? 'text-gray-100' : 'text-gray-900'} font-medium`}>
                           {new Date(catch_item.caught_at).toLocaleDateString('sv-SE')}
                         </span>
                       </div>
                       {catch_item.weather_data && (
                         <>
-                          <div className="flex justify-between items-center">
-                            <span className={`${darkMode ? 'text-gray-300' : 'text-gray-700'} font-medium`}>Väder:</span>
-                            <span className={`${darkMode ? 'text-green-400' : 'text-green-700'} font-semibold`}>
-                              {catch_item.weather_data.temperature}°C, {catch_item.weather_data.weather_desc}
+                          <div className={`pt-2 mt-2 ${darkMode ? 'border-gray-700' : 'border-gray-200'} border-t`}>
+                            <div className="flex items-center gap-2">
+                              <CloudRain className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+                              <span className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Väder:</span>
+                              <span className={`ml-auto ${darkMode ? 'text-green-400' : 'text-green-600'} font-medium`}>
+                                {catch_item.weather_data.temperature}°C
+                              </span>
+                            </div>
+                            <p className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-500'} mt-1 ml-6`}>
+                              {catch_item.weather_data.weather_desc}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Wind className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+                            <span className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Vind:</span>
+                            <span className={`ml-auto ${darkMode ? 'text-gray-100' : 'text-gray-900'} font-medium`}>
+                              {catch_item.weather_data.wind_speed} m/s
                             </span>
                           </div>
-                          <div className="flex justify-between items-center">
-                            <span className={`${darkMode ? 'text-gray-300' : 'text-gray-700'} font-medium`}>Vind:</span>
-                            <span className={`${darkMode ? 'text-gray-100' : 'text-gray-900'} font-semibold`}>
-                              {catch_item.weather_data.wind_speed} m/s, {catch_item.weather_data.wind_direction}°
-                            </span>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <span className={`${darkMode ? 'text-gray-300' : 'text-gray-700'} font-medium`}>Lufttryck:</span>
-                            <span className={`${darkMode ? 'text-gray-100' : 'text-gray-900'} font-semibold`}>
+                          <div className="flex items-center gap-2">
+                            <Gauge className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+                            <span className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Lufttryck:</span>
+                            <span className={`ml-auto ${darkMode ? 'text-gray-100' : 'text-gray-900'} font-medium`}>
                               {catch_item.weather_data.pressure} hPa
                             </span>
                           </div>
@@ -395,55 +445,62 @@ export default function Dashboard() {
                     </div>
 
                     {catch_item.notes && (
-                      <div className={`mt-4 pt-3 ${darkMode ? 'border-gray-700' : 'border-gray-200'} border-t`}>
-                        <p className={`text-sm ${darkMode ? 'text-gray-300 bg-gray-700' : 'text-gray-800 bg-gray-50'} italic p-2 rounded`}>{catch_item.notes}</p>
+                      <div className={`mt-3 pt-3 ${darkMode ? 'border-gray-700' : 'border-gray-200'} border-t`}>
+                        <div className="flex items-start gap-2">
+                          <StickyNote className={`w-4 h-4 mt-0.5 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+                          <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'} italic`}>{catch_item.notes}</p>
+                        </div>
                       </div>
                     )}
                   </div>
                 ))}
               </div>
             ) : (
-              <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow overflow-hidden`}>
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className={darkMode ? 'bg-gray-700' : 'bg-gray-50'}>
+              <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-xl border shadow-sm overflow-hidden`}>
+                <table className="min-w-full">
+                  <thead className={darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}>
                     <tr>
-                      <th className={`px-6 py-3 text-left text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-500'} uppercase tracking-wider`}>Art</th>
-                      <th className={`px-6 py-3 text-left text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-500'} uppercase tracking-wider`}>Vikt</th>
-                      <th className={`px-6 py-3 text-left text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-500'} uppercase tracking-wider`}>Längd</th>
-                      <th className={`px-6 py-3 text-left text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-500'} uppercase tracking-wider`}>Plats</th>
-                      <th className={`px-6 py-3 text-left text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-500'} uppercase tracking-wider`}>Datum</th>
-                      <th className={`px-6 py-3 text-left text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-500'} uppercase tracking-wider`}>Väder</th>
-                      <th className={`px-6 py-3 text-right text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-500'} uppercase tracking-wider`}>Åtgärder</th>
+                      <th className={`px-6 py-3.5 text-left text-xs font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-700'} uppercase tracking-wider`}>Art</th>
+                      <th className={`px-6 py-3.5 text-left text-xs font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-700'} uppercase tracking-wider`}>Vikt</th>
+                      <th className={`px-6 py-3.5 text-left text-xs font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-700'} uppercase tracking-wider`}>Längd</th>
+                      <th className={`px-6 py-3.5 text-left text-xs font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-700'} uppercase tracking-wider`}>Plats</th>
+                      <th className={`px-6 py-3.5 text-left text-xs font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-700'} uppercase tracking-wider`}>Datum</th>
+                      <th className={`px-6 py-3.5 text-left text-xs font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-700'} uppercase tracking-wider`}>Väder</th>
+                      <th className={`px-6 py-3.5 text-right text-xs font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-700'} uppercase tracking-wider`}>Åtgärder</th>
                     </tr>
                   </thead>
-                  <tbody className={`${darkMode ? 'bg-gray-800' : 'bg-white'} divide-y ${darkMode ? 'divide-gray-700' : 'divide-gray-200'}`}>
+                  <tbody className={`${darkMode ? 'bg-gray-800' : 'bg-white'} divide-y ${darkMode ? 'divide-gray-700/50' : 'divide-gray-200'}`}>
                     {sortCatches(visibleCatches.length > 0 ? visibleCatches : catches).map((catch_item) => (
-                      <tr key={catch_item.id} className={darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}>
+                      <tr key={catch_item.id} className={`${darkMode ? 'hover:bg-gray-700/50' : 'hover:bg-gray-50'} transition-colors`}>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className={`text-sm font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>{catch_item.species.name_swedish}</div>
+                          <div className="flex items-center gap-2">
+                            <Fish className={`w-4 h-4 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`} />
+                            <span className={`text-sm font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>{catch_item.species.name_swedish}</span>
+                          </div>
                         </td>
-                        <td className={`px-6 py-4 whitespace-nowrap text-sm ${darkMode ? 'text-gray-200' : 'text-gray-900'}`}>
-                          {catch_item.weight ? `${catch_item.weight} kg` : 'Okänd'}
+                        <td className={`px-6 py-4 whitespace-nowrap text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                          {catch_item.weight ? `${catch_item.weight} kg` : '—'}
                         </td>
-                        <td className={`px-6 py-4 whitespace-nowrap text-sm ${darkMode ? 'text-gray-200' : 'text-gray-900'}`}>
-                          {catch_item.length ? `${catch_item.length} cm` : 'Okänd'}
+                        <td className={`px-6 py-4 whitespace-nowrap text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                          {catch_item.length ? `${catch_item.length} cm` : '—'}
                         </td>
-                        <td className={`px-6 py-4 text-sm ${darkMode ? 'text-blue-400' : 'text-blue-700'} font-medium max-w-xs truncate`}>{catch_item.location_name}</td>
-                        <td className={`px-6 py-4 whitespace-nowrap text-sm ${darkMode ? 'text-gray-200' : 'text-gray-900'}`}>
+                        <td className={`px-6 py-4 text-sm ${darkMode ? 'text-blue-400' : 'text-blue-600'} font-medium max-w-xs truncate`}>{catch_item.location_name}</td>
+                        <td className={`px-6 py-4 whitespace-nowrap text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                           {new Date(catch_item.caught_at).toLocaleDateString('sv-SE')}
                         </td>
-                        <td className={`px-6 py-4 whitespace-nowrap text-sm ${darkMode ? 'text-green-400' : 'text-green-700'}`}>
+                        <td className={`px-6 py-4 whitespace-nowrap text-sm ${darkMode ? 'text-green-400' : 'text-green-600'}`}>
                           {catch_item.weather_data
                             ? `${catch_item.weather_data.temperature}°C`
-                            : '-'
+                            : '—'
                           }
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
                           <button
                             onClick={() => handleDeleteCatch(catch_item.id)}
-                            className="text-red-600 hover:text-red-900"
+                            className="inline-flex items-center gap-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 px-2.5 py-1.5 rounded-lg transition-colors"
                           >
-                            Radera
+                            <Trash2 className="w-3.5 h-3.5" />
+                            <span className="hidden sm:inline">Radera</span>
                           </button>
                         </td>
                       </tr>
