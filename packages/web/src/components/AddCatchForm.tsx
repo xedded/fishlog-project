@@ -72,16 +72,48 @@ export default function AddCatchForm({ onSuccess, onCancel, userId }: AddCatchFo
     try {
       // 1. Fetch weather data
       const weatherUrl = `/api/weather?lat=${formData.latitude}&lon=${formData.longitude}&timestamp=${new Date(formData.caught_at).toISOString()}`
+      console.log('Fetching weather from:', weatherUrl)
       const weatherResponse = await fetch(weatherUrl)
       let weatherData = null
 
       if (weatherResponse.ok) {
         weatherData = await weatherResponse.json()
+        console.log('Weather data received:', weatherData)
       } else {
-        console.warn('Could not fetch weather data')
+        console.warn('Could not fetch weather data:', weatherResponse.status, weatherResponse.statusText)
+        const errorText = await weatherResponse.text()
+        console.error('Weather API error response:', errorText)
       }
 
-      // 2. Insert catch
+      // 2. Insert weather data first if available
+      let weatherId = null
+      if (weatherData && weatherData.temperature !== null) {
+        console.log('Attempting to insert weather data:', weatherData)
+        const { data: insertedWeather, error: weatherError } = await supabase
+          .from('weather_data')
+          .insert({
+            temperature: weatherData.temperature,
+            weather_desc: weatherData.weather_desc,
+            pressure: weatherData.pressure,
+            humidity: weatherData.humidity,
+            wind_speed: weatherData.wind_speed,
+            wind_direction: weatherData.wind_direction,
+            recorded_at: formData.caught_at
+          })
+          .select()
+          .single()
+
+        if (weatherError) {
+          console.error('Weather data insert error:', weatherError)
+        } else {
+          console.log('Weather data inserted successfully:', insertedWeather)
+          weatherId = insertedWeather.id
+        }
+      } else {
+        console.log('Weather data not available or invalid:', weatherData)
+      }
+
+      // 3. Insert catch with weather_id reference
       const { data: catchData, error: catchError } = await supabase
         .from('catches')
         .insert({
@@ -93,31 +125,13 @@ export default function AddCatchForm({ onSuccess, onCancel, userId }: AddCatchFo
           longitude: parseFloat(formData.longitude),
           location_name: formData.location_name,
           caught_at: formData.caught_at,
-          notes: formData.notes || null
+          notes: formData.notes || null,
+          weather_id: weatherId
         })
         .select()
         .single()
 
       if (catchError) throw catchError
-
-      // 3. Insert weather data if available
-      if (weatherData && weatherData.temperature !== null && catchData) {
-        const { error: weatherError } = await supabase
-          .from('weather_data')
-          .insert({
-            catch_id: catchData.id,
-            temperature: weatherData.temperature,
-            weather_desc: weatherData.weather_desc,
-            pressure: weatherData.pressure,
-            humidity: weatherData.humidity,
-            wind_speed: weatherData.wind_speed,
-            wind_direction: weatherData.wind_direction
-          })
-
-        if (weatherError) {
-          console.error('Weather data insert error:', weatherError)
-        }
-      }
 
       onSuccess()
     } catch (error) {
