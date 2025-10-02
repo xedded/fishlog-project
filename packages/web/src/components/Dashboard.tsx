@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { supabase } from '@/lib/supabase'
 import CatchMap from './CatchMap'
 import AddCatchForm from './AddCatchForm'
+import EditCatchForm from './EditCatchForm'
 import {
   Sun,
   Moon,
@@ -18,6 +19,7 @@ import {
   Ruler,
   Weight,
   Trash2,
+  Pencil,
   Fish,
   Wind,
   Gauge,
@@ -65,6 +67,7 @@ export default function Dashboard() {
   const [catches, setCatches] = useState<Catch[]>([])
   const [loading, setLoading] = useState(true)
   const [showAddForm, setShowAddForm] = useState(false)
+  const [editingCatch, setEditingCatch] = useState<Catch | null>(null)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [darkMode, setDarkMode] = useState(() => {
     // Initialize from localStorage or default to true
@@ -451,15 +454,24 @@ export default function Dashboard() {
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {sortCatches(visibleCatches.length > 0 ? visibleCatches : catches).map((catch_item) => (
                   <div key={catch_item.id} className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-xl border shadow-sm hover:shadow-md transition-shadow p-5 relative`}>
-                    <button
-                      onClick={() => handleDeleteCatch(catch_item.id)}
-                      className="absolute top-3 right-3 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 p-1.5 rounded-lg transition-colors"
-                      title="Radera fångst"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    <div className="absolute top-3 right-3 flex gap-1">
+                      <button
+                        onClick={() => setEditingCatch(catch_item)}
+                        className="text-blue-500 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 p-1.5 rounded-lg transition-colors"
+                        title="Redigera fångst"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteCatch(catch_item.id)}
+                        className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 p-1.5 rounded-lg transition-colors"
+                        title="Radera fångst"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
 
-                    <div className="flex items-center gap-2 mb-4 pr-8">
+                    <div className="flex items-center gap-2 mb-4 pr-16">
                       <Fish className={`w-5 h-5 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`} />
                       <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
                         {catch_item.species.name_swedish}
@@ -615,13 +627,22 @@ export default function Dashboard() {
                               {new Date(catch_item.caught_at).toLocaleDateString('sv-SE')}
                             </td>
                             <td className="hidden sm:table-cell px-4 py-4 whitespace-nowrap text-right text-sm" onClick={(e) => e.stopPropagation()}>
-                              <button
-                                onClick={() => handleDeleteCatch(catch_item.id)}
-                                className="inline-flex items-center gap-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 px-2.5 py-1.5 rounded-lg transition-colors"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                                <span>Radera</span>
-                              </button>
+                              <div className="flex gap-2 justify-end">
+                                <button
+                                  onClick={() => setEditingCatch(catch_item)}
+                                  className="inline-flex items-center gap-1.5 text-blue-500 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 px-2.5 py-1.5 rounded-lg transition-colors"
+                                >
+                                  <Pencil className="w-3.5 h-3.5" />
+                                  <span>Redigera</span>
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteCatch(catch_item.id)}
+                                  className="inline-flex items-center gap-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 px-2.5 py-1.5 rounded-lg transition-colors"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                  <span>Radera</span>
+                                </button>
+                              </div>
                             </td>
                           </tr>
                           {isExpanded && (
@@ -675,14 +696,21 @@ export default function Dashboard() {
                                     </div>
                                   )}
 
-                                  {/* Radera-knapp - visas bara på mobil */}
-                                  <div className="sm:hidden flex justify-end pt-2" onClick={(e) => e.stopPropagation()}>
+                                  {/* Knappar - visas bara på mobil */}
+                                  <div className="sm:hidden flex gap-2 justify-end pt-2" onClick={(e) => e.stopPropagation()}>
+                                    <button
+                                      onClick={() => setEditingCatch(catch_item)}
+                                      className="inline-flex items-center gap-1.5 text-blue-500 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 px-3 py-2 rounded-lg transition-colors"
+                                    >
+                                      <Pencil className="w-4 h-4" />
+                                      <span>Redigera</span>
+                                    </button>
                                     <button
                                       onClick={() => handleDeleteCatch(catch_item.id)}
                                       className="inline-flex items-center gap-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 px-3 py-2 rounded-lg transition-colors"
                                     >
                                       <Trash2 className="w-4 h-4" />
-                                      <span>Radera fångst</span>
+                                      <span>Radera</span>
                                     </button>
                                   </div>
                                 </div>
@@ -706,6 +734,19 @@ export default function Dashboard() {
           userId={user?.id || ''}
           onSuccess={handleAddSuccess}
           onCancel={() => setShowAddForm(false)}
+          darkMode={darkMode}
+        />
+      )}
+
+      {/* Edit Catch Form Modal */}
+      {editingCatch && (
+        <EditCatchForm
+          catchData={editingCatch}
+          onSuccess={() => {
+            setEditingCatch(null)
+            fetchCatches()
+          }}
+          onCancel={() => setEditingCatch(null)}
           darkMode={darkMode}
         />
       )}
