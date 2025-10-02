@@ -4,11 +4,16 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Catch } from '@/types/catch'
 import { APIProvider, Map, AdvancedMarker } from '@vis.gl/react-google-maps'
+import { useLanguage } from '@/contexts/LanguageContext'
+import { detectContinent } from '@/lib/continentDetection'
 
 interface Species {
   id: string
   name_swedish: string
+  name_english: string
   name_latin: string
+  category: string
+  continent: string
 }
 
 interface EditCatchFormProps {
@@ -19,7 +24,10 @@ interface EditCatchFormProps {
 }
 
 export default function EditCatchForm({ catchData, onSuccess, onCancel, darkMode = false }: EditCatchFormProps) {
+  const { language } = useLanguage()
   const [species, setSpecies] = useState<Species[]>([])
+  const [userFavorites, setUserFavorites] = useState<Species[]>([])
+  const [userRegion, setUserRegion] = useState<string>('Europe')
   const [loading, setLoading] = useState(false)
   const [useMapPicker, setUseMapPicker] = useState(false)
   const [formData, setFormData] = useState({
@@ -35,7 +43,12 @@ export default function EditCatchForm({ catchData, onSuccess, onCancel, darkMode
 
   useEffect(() => {
     fetchSpecies()
-  }, [])
+    fetchUserFavorites()
+
+    // Detect user region from existing catch coordinates
+    const region = detectContinent(catchData.latitude, catchData.longitude)
+    setUserRegion(region)
+  }, [catchData.user_id])
 
   const fetchLocationName = async (lat: number, lon: number) => {
     try {
@@ -53,13 +66,49 @@ export default function EditCatchForm({ catchData, onSuccess, onCancel, darkMode
     }
   }
 
+  const fetchUserFavorites = async () => {
+    const response = await fetch(`/api/user-favorites?userId=${catchData.user_id}`)
+    const data = await response.json()
+    setUserFavorites(data.favorites || [])
+  }
+
   const fetchSpecies = async () => {
     const { data } = await supabase
       .from('species')
-      .select('id, name_swedish, name_latin')
-      .order('name_swedish')
+      .select('id, name_swedish, name_english, name_latin, category, continent')
+      .order('name_english', { ascending: true })
 
     if (data) setSpecies(data)
+  }
+
+  const getSortedSpecies = (): (Species | { id: string; name_english: string; disabled: true })[] => {
+    if (species.length === 0) return []
+
+    const favoriteIds = new Set(userFavorites.map(f => f.id))
+    const regionalSpecies = species.filter(s =>
+      !favoriteIds.has(s.id) && (s.continent === userRegion || s.continent === 'Global')
+    )
+    const otherSpecies = species.filter(s =>
+      !favoriteIds.has(s.id) && s.continent !== userRegion && s.continent !== 'Global'
+    )
+
+    const result: any[] = []
+
+    // Add favorites
+    if (userFavorites.length > 0) {
+      result.push(...userFavorites)
+      result.push({ id: 'separator', name_english: '──────────────', disabled: true })
+    }
+
+    // Add regional species
+    result.push(...regionalSpecies)
+
+    // Add other species
+    if (otherSpecies.length > 0) {
+      result.push(...otherSpecies)
+    }
+
+    return result
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -115,11 +164,18 @@ export default function EditCatchForm({ catchData, onSuccess, onCancel, darkMode
                 className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
               >
                 <option value="">Välj art...</option>
-                {species.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name_swedish} ({s.name_latin})
-                  </option>
-                ))}
+                {getSortedSpecies().map((s) => {
+                  if ('disabled' in s && s.disabled) {
+                    return <option key={s.id} disabled>────────────────</option>
+                  }
+
+                  const displayName = language === 'en' ? s.name_english : s.name_swedish
+                  return (
+                    <option key={s.id} value={s.id}>
+                      {displayName} ({s.name_latin})
+                    </option>
+                  )
+                })}
               </select>
             </div>
 
