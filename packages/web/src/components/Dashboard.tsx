@@ -33,13 +33,14 @@ import {
 
 interface Catch {
   id: string
+  species_id: string
   weight: number | null
   length: number | null
   latitude: number
   longitude: number
   location_name: string
   caught_at: string
-  notes?: string
+  notes: string | null
   species: {
     name_swedish: string
     name_latin: string
