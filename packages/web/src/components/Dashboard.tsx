@@ -31,12 +31,15 @@ import {
   ChevronRight,
   ArrowUp,
   ArrowDown,
-  Languages
+  Settings,
+  Check
 } from 'lucide-react'
 
 // Convert degrees to compass direction
-const degreesToCompass = (degrees: number): string => {
-  const directions = ['N', 'NNÖ', 'NÖ', 'ÖNÖ', 'Ö', 'ÖSÖ', 'SÖ', 'SSÖ', 'S', 'SSV', 'SV', 'VSV', 'V', 'VNV', 'NV', 'NNV']
+const degreesToCompass = (degrees: number, lang: 'sv' | 'en'): string => {
+  const directionsSv = ['N', 'NNÖ', 'NÖ', 'ÖNÖ', 'Ö', 'ÖSÖ', 'SÖ', 'SSÖ', 'S', 'SSV', 'SV', 'VSV', 'V', 'VNV', 'NV', 'NNV']
+  const directionsEn = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW']
+  const directions = lang === 'sv' ? directionsSv : directionsEn
   const index = Math.round(((degrees % 360) / 22.5))
   return directions[index % 16]
 }
@@ -49,6 +52,7 @@ export default function Dashboard() {
   const [showAddForm, setShowAddForm] = useState(false)
   const [editingCatch, setEditingCatch] = useState<Catch | null>(null)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+  const [showSettings, setShowSettings] = useState(false)
   const [darkMode, setDarkMode] = useState(() => {
     // Initialize from localStorage or default to true
     if (typeof window !== 'undefined') {
@@ -56,6 +60,13 @@ export default function Dashboard() {
       return saved ? JSON.parse(saved) : true
     }
     return true
+  })
+  const [units, setUnits] = useState<'metric' | 'imperial'>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('fishlog-units')
+      return (saved as 'metric' | 'imperial') || 'metric'
+    }
+    return 'metric'
   })
   const [sortBy, setSortBy] = useState<'date' | 'species' | 'weight' | 'length'>('date')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
@@ -74,6 +85,86 @@ export default function Dashboard() {
       localStorage.setItem('fishlog-darkmode', JSON.stringify(darkMode))
     }
   }, [darkMode])
+
+  // Save units to localStorage whenever it changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('fishlog-units', units)
+    }
+  }, [units])
+
+  // Conversion functions
+  const convertWeight = (kg: number | null): string => {
+    if (!kg) return '—'
+    if (units === 'imperial') {
+      const lbs = kg * 2.20462
+      return `${lbs.toFixed(1)} lbs`
+    }
+    return `${kg} kg`
+  }
+
+  const convertLength = (cm: number | null): string => {
+    if (!cm) return '—'
+    if (units === 'imperial') {
+      const inches = cm * 0.393701
+      return `${inches.toFixed(1)} in`
+    }
+    return `${cm} cm`
+  }
+
+  const convertTemp = (celsius: number): string => {
+    if (units === 'imperial') {
+      const fahrenheit = (celsius * 9/5) + 32
+      return `${fahrenheit.toFixed(1)}°F`
+    }
+    return `${celsius}°C`
+  }
+
+  const convertWindSpeed = (ms: number): string => {
+    if (units === 'imperial') {
+      const mph = ms * 2.23694
+      return `${mph.toFixed(1)} mph`
+    }
+    return `${ms} m/s`
+  }
+
+  const formatDate = (dateStr: string): string => {
+    const date = new Date(dateStr)
+    if (language === 'en') {
+      return date.toLocaleDateString('en-US')
+    }
+    return date.toLocaleDateString('sv-SE')
+  }
+
+  const getSpeciesName = (species: { name_swedish: string; name_english: string }): string => {
+    return language === 'en' ? species.name_english : species.name_swedish
+  }
+
+  const translateWeather = (weatherDesc: string): string => {
+    if (language === 'sv') return weatherDesc
+
+    // Translate Swedish weather descriptions to English
+    const translations: Record<string, string> = {
+      'Klart': 'Clear',
+      'Molnigt': 'Cloudy',
+      'Lätt molnighet': 'Partly cloudy',
+      'Mulet': 'Overcast',
+      'Regn': 'Rain',
+      'Lätt regn': 'Light rain',
+      'Kraftigt regn': 'Heavy rain',
+      'Snö': 'Snow',
+      'Lätt snö': 'Light snow',
+      'Dimma': 'Fog',
+      'Åska': 'Thunderstorm',
+      'Duggregn': 'Drizzle',
+      'Hagel': 'Hail',
+      'Delvis molnigt': 'Partly cloudy',
+      'Mestadels klart': 'Mostly clear',
+      'Mestadels molnigt': 'Mostly cloudy'
+    }
+
+    return translations[weatherDesc] || weatherDesc
+  }
 
   const toggleRow = (id: string) => {
     const newExpanded = new Set(expandedRows)
@@ -126,7 +217,7 @@ export default function Dashboard() {
       .from('catches')
       .select(`
         *,
-        species (name_swedish, name_latin, category),
+        species (name_swedish, name_english, name_latin, category),
         weather_data (temperature, weather_desc, wind_speed, wind_direction, pressure, humidity)
       `)
       .eq('user_id', user?.id)
@@ -321,20 +412,133 @@ export default function Dashboard() {
               </div>
             </div>
             <div className="flex gap-2 items-center">
-              <button
-                onClick={() => setLanguage(language === 'sv' ? 'en' : 'sv')}
-                className={`${darkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'} p-2 rounded-lg transition-colors`}
-                title={language === 'sv' ? 'Switch to English' : 'Byt till Svenska'}
-              >
-                <Languages className={`w-5 h-5 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`} />
-              </button>
-              <button
-                onClick={() => setDarkMode(!darkMode)}
-                className={`${darkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'} p-2 rounded-lg transition-colors`}
-                title={darkMode ? 'Ljust läge' : 'Mörkt läge'}
-              >
-                {darkMode ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5 text-gray-600" />}
-              </button>
+              {/* Settings Dropdown */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowSettings(!showSettings)}
+                  className={`${darkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'} p-2 rounded-lg transition-colors`}
+                  title={language === 'sv' ? 'Inställningar' : 'Settings'}
+                >
+                  <Settings className={`w-5 h-5 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`} />
+                </button>
+
+                {showSettings && (
+                  <>
+                    {/* Backdrop */}
+                    <div
+                      className="fixed inset-0 z-10"
+                      onClick={() => setShowSettings(false)}
+                    />
+
+                    {/* Dropdown menu */}
+                    <div className={`absolute right-0 mt-2 w-64 rounded-lg shadow-lg z-20 ${darkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}>
+                      <div className="p-3">
+                        <h3 className={`text-sm font-semibold mb-3 ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>
+                          {language === 'sv' ? 'Inställningar' : 'Settings'}
+                        </h3>
+
+                        {/* Language Setting */}
+                        <div className="mb-4">
+                          <label className={`text-xs font-medium block mb-2 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                            {language === 'sv' ? 'Språk' : 'Language'}
+                          </label>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => setLanguage('sv')}
+                              className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg transition-colors ${
+                                language === 'sv'
+                                  ? `${darkMode ? 'bg-blue-600 text-white' : 'bg-blue-500 text-white'}`
+                                  : `${darkMode ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`
+                              }`}
+                            >
+                              <span className="text-lg">🇸🇪</span>
+                              <span className="text-sm">Svenska</span>
+                              {language === 'sv' && <Check className="w-4 h-4" />}
+                            </button>
+                            <button
+                              onClick={() => setLanguage('en')}
+                              className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg transition-colors ${
+                                language === 'en'
+                                  ? `${darkMode ? 'bg-blue-600 text-white' : 'bg-blue-500 text-white'}`
+                                  : `${darkMode ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`
+                              }`}
+                            >
+                              <span className="text-lg">🇬🇧</span>
+                              <span className="text-sm">English</span>
+                              {language === 'en' && <Check className="w-4 h-4" />}
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Theme Setting */}
+                        <div className="mb-4">
+                          <label className={`text-xs font-medium block mb-2 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                            {language === 'sv' ? 'Tema' : 'Theme'}
+                          </label>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => setDarkMode(false)}
+                              className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg transition-colors ${
+                                !darkMode
+                                  ? 'bg-blue-500 text-white'
+                                  : `${darkMode ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`
+                              }`}
+                            >
+                              <Sun className="w-4 h-4" />
+                              <span className="text-sm">{language === 'sv' ? 'Ljust' : 'Light'}</span>
+                              {!darkMode && <Check className="w-4 h-4" />}
+                            </button>
+                            <button
+                              onClick={() => setDarkMode(true)}
+                              className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg transition-colors ${
+                                darkMode
+                                  ? 'bg-blue-600 text-white'
+                                  : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                              }`}
+                            >
+                              <Moon className="w-4 h-4" />
+                              <span className="text-sm">{language === 'sv' ? 'Mörkt' : 'Dark'}</span>
+                              {darkMode && <Check className="w-4 h-4" />}
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Units Setting */}
+                        <div>
+                          <label className={`text-xs font-medium block mb-2 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                            {language === 'sv' ? 'Enheter' : 'Units'}
+                          </label>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => setUnits('metric')}
+                              className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg transition-colors ${
+                                units === 'metric'
+                                  ? `${darkMode ? 'bg-blue-600 text-white' : 'bg-blue-500 text-white'}`
+                                  : `${darkMode ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`
+                              }`}
+                            >
+                              <span className="text-sm">Metric</span>
+                              {units === 'metric' && <Check className="w-4 h-4" />}
+                            </button>
+                            <button
+                              onClick={() => setUnits('imperial')}
+                              className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg transition-colors ${
+                                units === 'imperial'
+                                  ? `${darkMode ? 'bg-blue-600 text-white' : 'bg-blue-500 text-white'}`
+                                  : `${darkMode ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`
+                              }`}
+                            >
+                              <span className="text-sm">Imperial</span>
+                              {units === 'imperial' && <Check className="w-4 h-4" />}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+
               <button
                 onClick={handleSignOut}
                 className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors"
@@ -461,7 +665,7 @@ export default function Dashboard() {
                     <div className="flex items-center gap-2 mb-4 pr-16">
                       <Fish className={`w-5 h-5 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`} />
                       <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                        {catch_item.species.name_swedish}
+                        {getSpeciesName(catch_item.species)}
                       </h3>
                     </div>
 
@@ -470,14 +674,14 @@ export default function Dashboard() {
                         <Weight className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
                         <span className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>{t('catch.weight')}:</span>
                         <span className={`ml-auto ${darkMode ? 'text-gray-100' : 'text-gray-900'} font-medium`}>
-                          {catch_item.weight ? `${catch_item.weight} kg` : 'Okänd'}
+                          {convertWeight(catch_item.weight)}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Ruler className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
                         <span className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>{t('catch.length')}:</span>
                         <span className={`ml-auto ${darkMode ? 'text-gray-100' : 'text-gray-900'} font-medium`}>
-                          {catch_item.length ? `${catch_item.length} cm` : 'Okänd'}
+                          {convertLength(catch_item.length)}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
@@ -491,7 +695,7 @@ export default function Dashboard() {
                         <Calendar className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
                         <span className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>{t('catch.date')}:</span>
                         <span className={`ml-auto ${darkMode ? 'text-gray-100' : 'text-gray-900'} font-medium`}>
-                          {new Date(catch_item.caught_at).toLocaleDateString('sv-SE')}
+                          {formatDate(catch_item.caught_at)}
                         </span>
                       </div>
                       {catch_item.weather_data && (
@@ -501,18 +705,18 @@ export default function Dashboard() {
                               <CloudRain className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
                               <span className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>{t('catch.weather')}:</span>
                               <span className={`ml-auto ${darkMode ? 'text-green-400' : 'text-green-600'} font-medium`}>
-                                {catch_item.weather_data.temperature}°C
+                                {convertTemp(catch_item.weather_data.temperature)}
                               </span>
                             </div>
                             <p className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-500'} mt-1 ml-6`}>
-                              {catch_item.weather_data.weather_desc}
+                              {translateWeather(catch_item.weather_data.weather_desc)}
                             </p>
                           </div>
                           <div className="flex items-center gap-2">
                             <Wind className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
                             <span className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>{t('catch.windSpeed')}:</span>
                             <span className={`ml-auto ${darkMode ? 'text-gray-100' : 'text-gray-900'} font-medium`}>
-                              {catch_item.weather_data.wind_speed} m/s {degreesToCompass(catch_item.weather_data.wind_direction)}
+                              {convertWindSpeed(catch_item.weather_data.wind_speed)} {degreesToCompass(catch_item.weather_data.wind_direction, language)}
                             </span>
                           </div>
                           <div className="flex items-center gap-2">
@@ -600,18 +804,18 @@ export default function Dashboard() {
                             <td className="px-3 sm:px-4 py-3 sm:py-4 whitespace-nowrap">
                               <div className="flex items-center gap-1.5 sm:gap-2">
                                 <Fish className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`} />
-                                <span className={`text-xs sm:text-sm font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>{catch_item.species.name_swedish}</span>
+                                <span className={`text-xs sm:text-sm font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>{getSpeciesName(catch_item.species)}</span>
                               </div>
                             </td>
                             <td className={`px-3 sm:px-4 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                              {catch_item.weight ? `${catch_item.weight} kg` : '—'}
+                              {convertWeight(catch_item.weight)}
                             </td>
                             <td className={`px-3 sm:px-4 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                              {catch_item.length ? `${catch_item.length} cm` : '—'}
+                              {convertLength(catch_item.length)}
                             </td>
                             <td className={`hidden md:table-cell px-4 py-4 text-sm ${darkMode ? 'text-blue-400' : 'text-blue-600'} font-medium max-w-xs truncate`}>{catch_item.location_name}</td>
                             <td className={`px-3 sm:px-4 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                              {new Date(catch_item.caught_at).toLocaleDateString('sv-SE')}
+                              {formatDate(catch_item.caught_at)}
                             </td>
                             <td className="hidden sm:table-cell px-4 py-4 whitespace-nowrap text-right text-sm" onClick={(e) => e.stopPropagation()}>
                               <div className="flex gap-2 justify-end">
@@ -652,12 +856,12 @@ export default function Dashboard() {
                                         <div className="flex items-center gap-2">
                                           <CloudRain className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
                                           <span className={darkMode ? 'text-gray-300' : 'text-gray-600'}>{t('catch.temperature')}:</span>
-                                          <span className={`font-medium ${darkMode ? 'text-green-400' : 'text-green-600'}`}>{catch_item.weather_data.temperature}°C</span>
+                                          <span className={`font-medium ${darkMode ? 'text-green-400' : 'text-green-600'}`}>{convertTemp(catch_item.weather_data.temperature)}</span>
                                         </div>
                                         <div className="flex items-center gap-2">
                                           <Wind className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
                                           <span className={darkMode ? 'text-gray-300' : 'text-gray-600'}>{t('catch.windSpeed')}:</span>
-                                          <span className={`font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>{catch_item.weather_data.wind_speed} m/s {degreesToCompass(catch_item.weather_data.wind_direction)}</span>
+                                          <span className={`font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>{convertWindSpeed(catch_item.weather_data.wind_speed)} {degreesToCompass(catch_item.weather_data.wind_direction, language)}</span>
                                         </div>
                                         <div className="flex items-center gap-2">
                                           <Gauge className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
@@ -666,7 +870,7 @@ export default function Dashboard() {
                                         </div>
                                         <div className="col-span-2 md:col-span-3">
                                           <span className={darkMode ? 'text-gray-300' : 'text-gray-600'}>{t('catch.weather')}: </span>
-                                          <span className={`font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>{catch_item.weather_data.weather_desc}</span>
+                                          <span className={`font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>{translateWeather(catch_item.weather_data.weather_desc)}</span>
                                         </div>
                                       </div>
                                     </div>

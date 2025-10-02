@@ -14,6 +14,7 @@ export interface Catch {
   notes: string | null
   species: {
     name_swedish: string
+    name_english: string
     name_latin: string
     category: string
   }
