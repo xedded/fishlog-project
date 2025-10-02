@@ -79,10 +79,15 @@ export async function POST(request: NextRequest) {
 
     if (!existingUser) {
       // Hämta email från auth.users
-      const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(userId)
+      const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.getUserById(userId)
+
+      if (authError) {
+        console.error('Auth user fetch error:', authError)
+        return NextResponse.json({ error: 'Failed to fetch user from auth' }, { status: 500 })
+      }
 
       // Skapa user profile om den inte finns
-      await supabaseAdmin
+      const { data: newUser, error: createUserError } = await supabaseAdmin
         .from('users')
         .insert({
           id: userId,
@@ -90,6 +95,18 @@ export async function POST(request: NextRequest) {
           name: authUser?.user?.user_metadata?.full_name || 'Test User',
           created_at: new Date().toISOString()
         })
+        .select()
+        .single()
+
+      if (createUserError) {
+        console.error('User creation error:', createUserError)
+        return NextResponse.json({
+          error: 'Failed to create user profile',
+          details: createUserError.message
+        }, { status: 500 })
+      }
+
+      console.log('Created new user profile:', newUser)
     }
 
     // Hämta alla arter från databasen
