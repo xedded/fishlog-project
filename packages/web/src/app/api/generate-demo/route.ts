@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import type { DatabaseUserInsert, DatabaseCatchInsert, DatabaseWeatherDataInsert } from '@/types/database'
 
 // Create a Supabase client with service role key to bypass RLS
 const supabaseAdmin = createClient(
@@ -87,14 +88,16 @@ export async function POST(request: NextRequest) {
       }
 
       // Skapa user profile om den inte finns
+      const userInsert: DatabaseUserInsert = {
+        id: userId,
+        email: authUser?.user?.email || 'unknown@email.com',
+        profile_name: authUser?.user?.user_metadata?.full_name || 'Test User',
+        created_at: new Date().toISOString()
+      }
+
       const { data: newUser, error: createUserError } = await supabaseAdmin
         .from('users')
-        .insert({
-          id: userId,
-          email: authUser?.user?.email || 'unknown@email.com',
-          profile_name: authUser?.user?.user_metadata?.full_name || 'Test User',
-          created_at: new Date().toISOString()
-        })
+        .insert(userInsert)
         .select()
         .single()
 
@@ -176,17 +179,19 @@ export async function POST(request: NextRequest) {
           const weatherData = await weatherResponse.json()
 
           if (weatherData.temperature !== null) {
+            const weatherInsert: DatabaseWeatherDataInsert = {
+              temperature: weatherData.temperature,
+              weather_desc: weatherData.weather_desc,
+              pressure: weatherData.pressure,
+              humidity: weatherData.humidity,
+              wind_speed: weatherData.wind_speed,
+              wind_direction: weatherData.wind_direction,
+              recorded_at: caughtAt.toISOString()
+            }
+
             const { data: insertedWeather } = await supabaseAdmin
               .from('weather_data')
-              .insert({
-                temperature: weatherData.temperature,
-                weather_desc: weatherData.weather_desc,
-                pressure: weatherData.pressure,
-                humidity: weatherData.humidity,
-                wind_speed: weatherData.wind_speed,
-                wind_direction: weatherData.wind_direction,
-                recorded_at: caughtAt.toISOString()
-              })
+              .insert(weatherInsert)
               .select()
               .single()
 
@@ -200,20 +205,23 @@ export async function POST(request: NextRequest) {
       }
 
       // Skapa fångsten
+      const catchInsert: DatabaseCatchInsert = {
+        user_id: userId,
+        species_id: dbSpecies.id,
+        weight,
+        length,
+        quantity: 1,
+        latitude,
+        longitude,
+        location_name: location.name,
+        caught_at: caughtAt.toISOString(),
+        weather_id: weatherId,
+        notes: Math.random() > 0.7 ? 'Genererad demodata' : null
+      }
+
       const { data: catchData, error: catchError } = await supabaseAdmin
         .from('catches')
-        .insert({
-          user_id: userId,
-          species_id: dbSpecies.id,
-          weight,
-          length,
-          latitude,
-          longitude,
-          location_name: location.name,
-          caught_at: caughtAt.toISOString(),
-          weather_id: weatherId,
-          notes: Math.random() > 0.7 ? 'Genererad demodata' : null
-        })
+        .insert(catchInsert)
         .select()
         .single()
 

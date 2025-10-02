@@ -84,7 +84,36 @@ fishlog-project/
 
 ## Kodkonventioner
 
-### Shared Types
+### Database Types (VIKTIGT!)
+**Använd ALLTID types från `src/types/database.ts` när du interagerar med Supabase!**
+```typescript
+// packages/web/src/types/database.ts
+import type { DatabaseUserInsert, DatabaseCatchInsert, DatabaseWeatherDataInsert } from '@/types/database'
+
+// Exempel: Skapa user
+const userInsert: DatabaseUserInsert = {
+  id: userId,
+  email: 'user@example.com',
+  profile_name: 'Test User'  // OBS: profile_name, INTE name!
+}
+
+// Exempel: Skapa catch
+const catchInsert: DatabaseCatchInsert = {
+  user_id: userId,
+  species_id: speciesId,
+  weight: 2.5,
+  length: 45.5,
+  quantity: 1,  // OBS: quantity är required (default 1)
+  latitude: 59.32,
+  longitude: 18.06,
+  location_name: 'Mälaren',
+  caught_at: new Date().toISOString(),
+  weather_id: null,
+  notes: null
+}
+```
+
+### Presentation Types (frontend)
 ```typescript
 // packages/web/src/types/catch.ts
 export interface Catch {
