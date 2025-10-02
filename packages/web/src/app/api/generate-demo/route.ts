@@ -29,7 +29,9 @@ const FISH_SPECIES = [
   { name: 'Lax', minWeight: 1.0, maxWeight: 12.0, minLength: 50, maxLength: 120 },
   { name: 'Torsk', minWeight: 0.8, maxWeight: 10.0, minLength: 40, maxLength: 100 },
   { name: 'Makrill', minWeight: 0.2, maxWeight: 1.5, minLength: 25, maxLength: 50 },
-  { name: 'Braxen', minWeight: 0.3, maxWeight: 4.0, minLength: 20, maxLength: 60 },
+  { name: 'Regnbågslax', minWeight: 0.5, maxWeight: 6.0, minLength: 30, maxLength: 80 },
+  { name: 'Sill', minWeight: 0.1, maxWeight: 0.5, minLength: 15, maxLength: 30 },
+  { name: 'Karp', minWeight: 0.5, maxWeight: 10.0, minLength: 30, maxLength: 90 },
 ]
 
 function randomInRange(min: number, max: number): number {
