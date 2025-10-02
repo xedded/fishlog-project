@@ -95,8 +95,24 @@ Personlig fiskfångst-app med webb och mobilgränssnitt för att registrera fån
   - [x] Använder Supabase service role key för att kringgå RLS
   - [x] Omfattande debug-loggning för felsökning
 
-### Fas 4 - Statistik & Foto ← EJ PÅBÖRJAD
-- [ ] Redigera befintliga fångster
+### Fas 4 - Redigering & Förbättringar ← PÅGÅENDE
+- [x] **Redigera befintliga fångster**
+  - [x] EditCatchForm komponent
+  - [x] Edit-knappar i alla vyer (grid, list, mobil)
+  - [x] Uppdatera alla fält utom väderdata
+  - [x] Kartväljare för att ändra position
+- [ ] **Språkstöd (i18n)**
+  - [ ] Engelska + Svenska
+  - [ ] Toggle i UI (precis som darkmode)
+  - [ ] Spara språkval i localStorage
+  - [ ] Översätt alla UI-texter
+  - [ ] Behåll svenska/latinska fisknamn
+- [ ] **Utökad artlista**
+  - [ ] Lägg till många fler fiskarter (100+)
+  - [ ] Kategorisera efter kontinent/region
+  - [ ] Sortera baserat på användarens position (kontinent)
+  - [ ] Visa 5 vanligaste användarvalda arter överst
+  - [ ] Avskiljare (------) mellan favoriter och huvudlista
 - [ ] Foto-upload funktionalitet
 - [ ] Basic statistik och listor
 - [ ] Filtrering på art/datum
@@ -200,26 +216,55 @@ fishlog-project/
   - IP-restriktioner rekommenderas i produktion
 - OAuth 2.0 konfigurerad för Supabase
 
-### 🚀 Nästa steg - Fas 4 (Statistik & Foto)
+### 🚀 Nästa steg - Fas 4 (Redigering & Förbättringar)
 
 **Högsta prioritet:**
-1. **Redigera fångster:** Klicka på en fångst för att redigera vikt, längd, plats, datum, anteckningar
-2. **Foto-upload:** Supabase Storage integration för fångstbilder
-3. **Filtrering:** Filtrera fångster på art och datumintervall
-4. **Basic statistik:**
+1. ✅ **Redigera fångster** - KLART
+   - EditCatchForm med alla fält
+   - Edit-knappar i grid/list/mobil vyer
+   - Kartväljare för position
+
+2. **Språkstöd (Internationalisering)**
+   - Toggle mellan Svenska/Engelska (precis som darkmode)
+   - Spara val i localStorage
+   - Översätt alla UI-texter (knappar, labels, meddelanden)
+   - Behåll fisknamn på båda språken (svenska + latin)
+   - i18n library (t.ex. next-i18next eller react-i18next)
+
+3. **Utökad artlista med smart sortering**
+   - **Databas:** Lägg till 100+ fiskarter
+     - Nordamerika: Bass, Trout, Salmon, Walleye, Pike, Muskie, Catfish, etc.
+     - Europa: Pike, Perch, Carp, Bream, Roach, Zander, etc.
+     - Asien: Tilapia, Snakehead, Carp species, etc.
+     - Oceanisk: Barramundi, Murray Cod, etc.
+   - **Schema:** Lägg till `continent` eller `region` kolumn i species-tabellen
+   - **Smart sortering:**
+     - Detektera användarens kontinent från koordinater (använd första fångstens position)
+     - Sortera arter baserat på region (lokala arter först)
+   - **Användarfavoriter:**
+     - Räkna användarens 5 vanligaste arter (GROUP BY species_id, ORDER BY COUNT)
+     - Visa dessa överst i dropdown
+     - Lägg till avskiljare: `<option disabled>──────────────</option>`
+     - Struktur: [Favoriter] → [Streck] → [Regionala arter] → [Övriga arter]
+
+4. **Foto-upload:** Supabase Storage integration för fångstbilder
+
+5. **Filtrering:** Filtrera fångster på art och datumintervall
+
+6. **Basic statistik:**
    - Total antal fångster
    - Största fångst (vikt/längd)
    - Fångster per art (diagram)
    - Favorit fiskeplats
 
 **Medium prioritet:**
-4. **Trendgrafer:**
+7. **Trendgrafer:**
    - Vikt över tid (line chart)
    - Fångster per månad (bar chart)
    - Väderkorrelation (scatter plot)
-5. **Export-funktion:** Exportera fångster till CSV/JSON
-6. **Dela fångst:** Generera delbar länk med bild
-7. **Månfas-data:** Visa månfas för varje fångst (bra för fiskeprognos)
+8. **Export-funktion:** Exportera fångster till CSV/JSON
+9. **Dela fångst:** Generera delbar länk med bild
+10. **Månfas-data:** Visa månfas för varje fångst (bra för fiskeprognos)
 
 **Lägre prioritet:**
 8. **Mobile app:** Koppla Expo-app till Supabase
