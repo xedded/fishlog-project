@@ -51,13 +51,16 @@ export async function GET(request: NextRequest) {
 
       // Om första resultatet är en Plus Code, leta efter ett bättre
       if (bestResult.formatted_address.match(/^[A-Z0-9]{4,}\+[A-Z0-9]{2,}/)) {
-        const betterResult = data.results.find((r: any) =>
+        const betterResult = data.results.find((r: { formatted_address: string }) =>
           !r.formatted_address.match(/^[A-Z0-9]{4,}\+[A-Z0-9]{2,}/)
         )
         if (betterResult) bestResult = betterResult
       }
 
-      const components = bestResult.address_components
+      const components = bestResult.address_components as Array<{
+        long_name: string
+        types: string[]
+      }>
 
       // Kolla efter sjö/naturlig feature
       const naturalFeature = components.find((c: { types: string[] }) =>
