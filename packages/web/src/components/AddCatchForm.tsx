@@ -25,7 +25,6 @@ interface AddCatchFormProps {
 export default function AddCatchForm({ onSuccess, onCancel, userId, darkMode = false }: AddCatchFormProps) {
   const { language } = useLanguage()
   const [species, setSpecies] = useState<Species[]>([])
-  const [userFavorites, setUserFavorites] = useState<Species[]>([])
   const [userRegion, setUserRegion] = useState<string>('Europe')
   const [loading, setLoading] = useState(false)
   const [useMapPicker, setUseMapPicker] = useState(false)
@@ -43,7 +42,6 @@ export default function AddCatchForm({ onSuccess, onCancel, userId, darkMode = f
 
   useEffect(() => {
     fetchSpecies()
-    fetchUserFavorites()
     // Försök hämta nuvarande position
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -75,7 +73,6 @@ export default function AddCatchForm({ onSuccess, onCancel, userId, darkMode = f
         }
       )
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId])
 
   const fetchLocationName = async (lat: number, lon: number) => {
@@ -109,11 +106,6 @@ export default function AddCatchForm({ onSuccess, onCancel, userId, darkMode = f
     }
   }
 
-  const fetchUserFavorites = async () => {
-    const response = await fetch(`/api/user-favorites?userId=${userId}`)
-    const data = await response.json()
-    setUserFavorites(data.favorites || [])
-  }
 
   const fetchSpecies = async () => {
     const { data } = await supabase
@@ -127,27 +119,31 @@ export default function AddCatchForm({ onSuccess, onCancel, userId, darkMode = f
   const getSortedSpecies = (): Array<Species | { id: string; name_english: string; disabled: true }> => {
     if (species.length === 0) return []
 
-    const favoriteIds = new Set(userFavorites.map(f => f.id))
-    const regionalSpecies = species.filter(s =>
-      !favoriteIds.has(s.id) && (s.continent === userRegion || s.continent === 'Global')
-    )
-    const otherSpecies = species.filter(s =>
-      !favoriteIds.has(s.id) && s.continent !== userRegion && s.continent !== 'Global'
-    )
+    // Filter by region but keep alphabetical order
+    const regionalSpecies = species
+      .filter(s => s.continent === userRegion || s.continent === 'Global')
+      .sort((a, b) => {
+        const nameA = language === 'en' ? a.name_english : a.name_swedish
+        const nameB = language === 'en' ? b.name_english : b.name_swedish
+        return nameA.localeCompare(nameB)
+      })
+
+    const otherSpecies = species
+      .filter(s => s.continent !== userRegion && s.continent !== 'Global')
+      .sort((a, b) => {
+        const nameA = language === 'en' ? a.name_english : a.name_swedish
+        const nameB = language === 'en' ? b.name_english : b.name_swedish
+        return nameA.localeCompare(nameB)
+      })
 
     const result: Array<Species | { id: string; name_english: string; disabled: true }> = []
 
-    // Add favorites
-    if (userFavorites.length > 0) {
-      result.push(...userFavorites)
-      result.push({ id: 'separator', name_english: '──────────────', disabled: true })
-    }
-
-    // Add regional species
+    // Add regional species (alphabetically sorted)
     result.push(...regionalSpecies)
 
-    // Add other species
+    // Add separator and other species if there are any
     if (otherSpecies.length > 0) {
+      result.push({ id: 'separator', name_english: '──────────────', disabled: true })
       result.push(...otherSpecies)
     }
 
