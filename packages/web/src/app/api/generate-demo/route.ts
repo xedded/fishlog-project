@@ -32,18 +32,18 @@ const SWEDISH_WATERS = [
   { name: 'Bottenviken - Luleå', lat: 65.58, lon: 22.15 },
 ]
 
-// Fiskarter med realistiska vikter och längder
+// Fiskarter med realistiska vikter och längder (använder engelska namn från DB)
 const FISH_SPECIES = [
-  { name: 'Gädda', minWeight: 0.5, maxWeight: 8.0, minLength: 30, maxLength: 110 },
-  { name: 'Abborre', minWeight: 0.1, maxWeight: 2.0, minLength: 15, maxLength: 45 },
-  { name: 'Öring', minWeight: 0.3, maxWeight: 5.0, minLength: 25, maxLength: 70 },
-  { name: 'Gös', minWeight: 0.5, maxWeight: 6.0, minLength: 35, maxLength: 80 },
-  { name: 'Lax', minWeight: 1.0, maxWeight: 12.0, minLength: 50, maxLength: 120 },
-  { name: 'Torsk', minWeight: 0.8, maxWeight: 10.0, minLength: 40, maxLength: 100 },
-  { name: 'Makrill', minWeight: 0.2, maxWeight: 1.5, minLength: 25, maxLength: 50 },
-  { name: 'Regnbågslax', minWeight: 0.5, maxWeight: 6.0, minLength: 30, maxLength: 80 },
-  { name: 'Sill', minWeight: 0.1, maxWeight: 0.5, minLength: 15, maxLength: 30 },
-  { name: 'Karp', minWeight: 0.5, maxWeight: 10.0, minLength: 30, maxLength: 90 },
+  { nameEn: 'Pike', nameSv: 'Gädda', minWeight: 0.5, maxWeight: 8.0, minLength: 30, maxLength: 110 },
+  { nameEn: 'Perch', nameSv: 'Abborre', minWeight: 0.1, maxWeight: 2.0, minLength: 15, maxLength: 45 },
+  { nameEn: 'Brown Trout', nameSv: 'Öring', minWeight: 0.3, maxWeight: 5.0, minLength: 25, maxLength: 70 },
+  { nameEn: 'Zander', nameSv: 'Gös', minWeight: 0.5, maxWeight: 6.0, minLength: 35, maxLength: 80 },
+  { nameEn: 'Atlantic Salmon', nameSv: 'Lax', minWeight: 1.0, maxWeight: 12.0, minLength: 50, maxLength: 120 },
+  { nameEn: 'Atlantic Cod', nameSv: 'Torsk', minWeight: 0.8, maxWeight: 10.0, minLength: 40, maxLength: 100 },
+  { nameEn: 'Mackerel', nameSv: 'Makrill', minWeight: 0.2, maxWeight: 1.5, minLength: 25, maxLength: 50 },
+  { nameEn: 'Rainbow Trout', nameSv: 'Regnbågslax', minWeight: 0.5, maxWeight: 6.0, minLength: 30, maxLength: 80 },
+  { nameEn: 'Herring', nameSv: 'Sill', minWeight: 0.1, maxWeight: 0.5, minLength: 15, maxLength: 30 },
+  { nameEn: 'Common Carp', nameSv: 'Karp', minWeight: 0.5, maxWeight: 10.0, minLength: 30, maxLength: 90 },
 ]
 
 function randomInRange(min: number, max: number): number {
@@ -73,23 +73,23 @@ export async function POST(request: NextRequest) {
     // Hämta alla arter från databasen
     const { data: species, error: speciesError } = await supabaseAdmin
       .from('species')
-      .select('id, name_swedish')
+      .select('id, name_english, name_swedish')
 
     if (speciesError || !species) {
       console.error('Species fetch error:', speciesError)
       return NextResponse.json({ error: 'Failed to fetch species' }, { status: 500 })
     }
 
-    // Filtrera FISH_SPECIES så vi bara använder arter som finns i databasen
+    // Filtrera FISH_SPECIES så vi bara använder arter som finns i databasen (matcha på engelska namn)
     const availableFishTypes = FISH_SPECIES.filter(fishType =>
-      species.some(s => s.name_swedish === fishType.name)
+      species.some(s => s.name_english === fishType.nameEn)
     )
 
     if (availableFishTypes.length === 0) {
       return NextResponse.json({
         error: 'No matching species in database',
-        dbSpecies: species.map(s => s.name_swedish),
-        configSpecies: FISH_SPECIES.map(f => f.name)
+        dbSpecies: species.map(s => s.name_english),
+        configSpecies: FISH_SPECIES.map(f => f.nameEn)
       }, { status: 500 })
     }
 
@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
     const debugLog: string[] = []
 
     debugLog.push(`Available fish types: ${availableFishTypes.length}`)
-    debugLog.push(`Fish types: ${availableFishTypes.map(f => f.name).join(', ')}`)
+    debugLog.push(`Fish types: ${availableFishTypes.map(f => f.nameEn).join(', ')}`)
 
     // Generera 10 fångster
     for (let i = 0; i < 10; i++) {
@@ -107,14 +107,14 @@ export async function POST(request: NextRequest) {
       // Välj slumpmässig art från de som finns
       const fishType = availableFishTypes[randomInt(0, availableFishTypes.length - 1)]
 
-      // Hitta motsvarande art i databasen
-      const dbSpecies = species.find(s => s.name_swedish === fishType.name)
+      // Hitta motsvarande art i databasen (matcha på engelska namn)
+      const dbSpecies = species.find(s => s.name_english === fishType.nameEn)
       if (!dbSpecies) {
-        debugLog.push(`SKIP ${i + 1}: Species not found in DB: ${fishType.name}`)
+        debugLog.push(`SKIP ${i + 1}: Species not found in DB: ${fishType.nameEn}`)
         continue
       }
 
-      debugLog.push(`Generating catch ${i + 1}: ${fishType.name} at ${location.name}`)
+      debugLog.push(`Generating catch ${i + 1}: ${fishType.nameEn} (${fishType.nameSv}) at ${location.name}`)
 
       // Generera realistiska mått
       const weight = Math.round(randomInRange(fishType.minWeight, fishType.maxWeight) * 100) / 100

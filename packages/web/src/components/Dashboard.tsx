@@ -256,68 +256,6 @@ export default function Dashboard() {
     return sorted
   }
 
-  const loadSampleData = async () => {
-    if (!user) return
-
-    setLoading(true)
-    try {
-      const { data: existingCatches } = await supabase
-        .from('catches')
-        .select('id')
-        .eq('user_id', user.id)
-
-      if (existingCatches && existingCatches.length > 0) {
-        alert('Du har redan fångster! Ta bort dem först eller logga in med nytt konto.')
-        setLoading(false)
-        return
-      }
-
-      const { data: species } = await supabase
-        .from('species')
-        .select('*')
-        .limit(10)
-
-      if (!species || species.length === 0) {
-        alert('Inga fiskarter hittades i databasen.')
-        setLoading(false)
-        return
-      }
-
-      const sampleCatches = [
-        { species: 'Gädda', weight: 4.2, length: 68.5, location: 'Vänern - Kållandsö', notes: 'Fantastisk gädda på wobbler vid gräsbänk!' },
-        { species: 'Abborre', weight: 0.8, length: 25.3, location: 'Stockholms skärgård - Sandhamn', notes: 'Fin abborre på jig vid stengrund' },
-        { species: 'Öring', weight: 1.6, length: 42.1, location: 'Vättern - Visingsö', notes: 'Vacker öring på spinnare i gryningen' },
-        { species: 'Gös', weight: 2.8, length: 55.7, location: 'Vänern - Kållandsö', notes: 'Gös på jigg vid 8 meters djup' },
-        { species: 'Lax', weight: 6.5, length: 78.2, location: 'Mörrum - Laxfiske', notes: 'Stor lax på flugfiske! Kamp på 15 minuter.' },
-        { species: 'Gädda', weight: 2.1, length: 52.3, location: 'Siljan - Rättvik', notes: 'Mindre gädda men fin fisk på spoon' }
-      ]
-
-      for (let i = 0; i < sampleCatches.length; i++) {
-        const catchData = sampleCatches[i]
-        const matchingSpecies = species.find(s => s.name_swedish === catchData.species) || species[0]
-
-        await supabase
-          .from('catches')
-          .insert({
-            user_id: user.id,
-            species_id: matchingSpecies.id,
-            weight: catchData.weight,
-            length: catchData.length,
-            latitude: 58.5923 + (Math.random() - 0.5) * 0.1,
-            longitude: 13.0813 + (Math.random() - 0.5) * 0.1,
-            location_name: catchData.location,
-            caught_at: new Date(Date.now() - (i * 7 * 24 * 60 * 60 * 1000)).toISOString(),
-            notes: catchData.notes
-          })
-      }
-
-      await fetchCatches()
-      alert('Provdata laddad! 🎣')
-    } catch (error) {
-      alert('Ett fel uppstod: ' + (error instanceof Error ? error.message : 'Okänt fel'))
-    }
-    setLoading(false)
-  }
 
   const handleSignOut = async () => {
     await signOut()
@@ -635,10 +573,11 @@ export default function Dashboard() {
                 <p className={`${darkMode ? 'text-gray-400' : 'text-gray-500'} text-lg`}>{t('dashboard.noCatches')}</p>
                 <p className={`${darkMode ? 'text-gray-500' : 'text-gray-400'} mb-4`}>{t('dashboard.noCatchesDesc')}</p>
                 <button
-                  onClick={loadSampleData}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md"
+                  onClick={generateDemoData}
+                  disabled={loading}
+                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md disabled:opacity-50"
                 >
-                  📊 Ladda provdata (6 fångster)
+                  {loading ? 'Genererar...' : '🎲 Generera demodata (10 fångster)'}
                 </button>
               </div>
             ) : viewMode === 'grid' ? (
