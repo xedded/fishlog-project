@@ -1,0 +1,92 @@
+{
+  "common": {
+    "loading": "Laddar...",
+    "save": "Spara",
+    "cancel": "Avbryt",
+    "delete": "Ta bort",
+    "edit": "Redigera",
+    "close": "Stäng",
+    "confirm": "Bekräfta",
+    "or": "eller"
+  },
+  "auth": {
+    "signIn": "Logga in",
+    "signUp": "Registrera dig",
+    "signOut": "Logga ut",
+    "signInWithGoogle": "Logga in med Google",
+    "signInWithEmail": "Logga in med e-post",
+    "email": "E-post",
+    "password": "Lösenord",
+    "createAccount": "Skapa konto",
+    "alreadyHaveAccount": "Har du redan ett konto?",
+    "dontHaveAccount": "Har du inget konto?"
+  },
+  "dashboard": {
+    "title": "Mina Fångster",
+    "addCatch": "Registrera ny fångst",
+    "generateDemo": "Generera demodata",
+    "viewGrid": "Rutnätsvy",
+    "viewList": "Listvy",
+    "noCatches": "Inga fångster ännu",
+    "noCatchesDesc": "Börja med att registrera din första fångst!",
+    "sortBy": "Sortera på",
+    "sortByDate": "Datum",
+    "sortBySpecies": "Art",
+    "sortByWeight": "Vikt",
+    "sortByLength": "Längd"
+  },
+  "catch": {
+    "species": "Art",
+    "weight": "Vikt",
+    "length": "Längd",
+    "location": "Plats",
+    "date": "Datum",
+    "notes": "Anteckningar",
+    "weather": "Väder",
+    "temperature": "Temperatur",
+    "pressure": "Lufttryck",
+    "humidity": "Luftfuktighet",
+    "windSpeed": "Vindhastighet",
+    "windDirection": "Vindriktning",
+    "selectSpecies": "Välj art...",
+    "weightPlaceholder": "2,5 (eller lämna tom)",
+    "lengthPlaceholder": "45,5 (eller lämna tom)",
+    "locationPlaceholder": "t.ex. Vänern, Mörrum",
+    "notesPlaceholder": "Härlig fiske med wobbler vid gräskant...",
+    "deleteCatch": "Ta bort fångst",
+    "deleteConfirm": "Är du säker på att du vill ta bort denna fångst?",
+    "registerNewCatch": "Registrera ny fångst",
+    "editCatch": "Redigera fångst",
+    "saveChanges": "Spara ändringar",
+    "saving": "Sparar...",
+    "updating": "Uppdaterar..."
+  },
+  "map": {
+    "selectOnMap": "Välj på karta",
+    "useAutoLocation": "Använd automatisk plats",
+    "clickToSelect": "Klicka på kartan för att välja position",
+    "clickToChange": "Klicka på kartan för att ändra position"
+  },
+  "stats": {
+    "totalCatches": "Totalt antal fångster",
+    "biggestCatch": "Största fångst",
+    "favoriteLocation": "Favoritplats",
+    "catchesPerSpecies": "Fångster per art"
+  },
+  "errors": {
+    "generic": "Ett fel uppstod",
+    "requiredField": "Detta fält är obligatoriskt",
+    "saveFailed": "Kunde inte spara fångst",
+    "loadFailed": "Kunde inte ladda data",
+    "checkFields": "Kontrollera att alla fält är korrekt ifyllda"
+  },
+  "units": {
+    "kg": "kg",
+    "cm": "cm",
+    "meters": "m",
+    "celsius": "°C",
+    "hPa": "hPa",
+    "percent": "%",
+    "metersPerSecond": "m/s"
+  }
+}

@@ -1,0 +1,92 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "confirm": "Confirm",
+    "or": "or"
+  },
+  "auth": {
+    "signIn": "Sign in",
+    "signUp": "Sign up",
+    "signOut": "Sign out",
+    "signInWithGoogle": "Sign in with Google",
+    "signInWithEmail": "Sign in with email",
+    "email": "Email",
+    "password": "Password",
+    "createAccount": "Create account",
+    "alreadyHaveAccount": "Already have an account?",
+    "dontHaveAccount": "Don't have an account?"
+  },
+  "dashboard": {
+    "title": "My Catches",
+    "addCatch": "Register new catch",
+    "generateDemo": "Generate demo data",
+    "viewGrid": "Grid view",
+    "viewList": "List view",
+    "noCatches": "No catches yet",
+    "noCatchesDesc": "Start by registering your first catch!",
+    "sortBy": "Sort by",
+    "sortByDate": "Date",
+    "sortBySpecies": "Species",
+    "sortByWeight": "Weight",
+    "sortByLength": "Length"
+  },
+  "catch": {
+    "species": "Species",
+    "weight": "Weight",
+    "length": "Length",
+    "location": "Location",
+    "date": "Date",
+    "notes": "Notes",
+    "weather": "Weather",
+    "temperature": "Temperature",
+    "pressure": "Pressure",
+    "humidity": "Humidity",
+    "windSpeed": "Wind speed",
+    "windDirection": "Wind direction",
+    "selectSpecies": "Select species...",
+    "weightPlaceholder": "2.5 (or leave empty)",
+    "lengthPlaceholder": "45.5 (or leave empty)",
+    "locationPlaceholder": "e.g. Lake Vänern, Mörrum",
+    "notesPlaceholder": "Great fishing with wobbler near grass bank...",
+    "deleteCatch": "Delete catch",
+    "deleteConfirm": "Are you sure you want to delete this catch?",
+    "registerNewCatch": "Register new catch",
+    "editCatch": "Edit catch",
+    "saveChanges": "Save changes",
+    "saving": "Saving...",
+    "updating": "Updating..."
+  },
+  "map": {
+    "selectOnMap": "Select on map",
+    "useAutoLocation": "Use automatic location",
+    "clickToSelect": "Click on the map to select position",
+    "clickToChange": "Click on the map to change position"
+  },
+  "stats": {
+    "totalCatches": "Total catches",
+    "biggestCatch": "Biggest catch",
+    "favoriteLocation": "Favorite location",
+    "catchesPerSpecies": "Catches per species"
+  },
+  "errors": {
+    "generic": "An error occurred",
+    "requiredField": "This field is required",
+    "saveFailed": "Could not save catch",
+    "loadFailed": "Could not load data",
+    "checkFields": "Check that all fields are correctly filled in"
+  },
+  "units": {
+    "kg": "kg",
+    "cm": "cm",
+    "meters": "m",
+    "celsius": "°C",
+    "hPa": "hPa",
+    "percent": "%",
+    "metersPerSecond": "m/s"
+  }
+}
