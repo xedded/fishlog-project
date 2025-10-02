@@ -68,21 +68,24 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch species' }, { status: 500 })
     }
 
-    console.log('Available species:', species.map(s => s.name_swedish))
-
     // Filtrera FISH_SPECIES så vi bara använder arter som finns i databasen
     const availableFishTypes = FISH_SPECIES.filter(fishType =>
       species.some(s => s.name_swedish === fishType.name)
     )
 
-    console.log('Matching fish types:', availableFishTypes.map(f => f.name))
-
     if (availableFishTypes.length === 0) {
-      console.error('No matching species found!')
-      return NextResponse.json({ error: 'No matching species in database' }, { status: 500 })
+      return NextResponse.json({
+        error: 'No matching species in database',
+        dbSpecies: species.map(s => s.name_swedish),
+        configSpecies: FISH_SPECIES.map(f => f.name)
+      }, { status: 500 })
     }
 
     const generatedCatches = []
+    const debugLog: string[] = []
+
+    debugLog.push(`Available fish types: ${availableFishTypes.length}`)
+    debugLog.push(`Fish types: ${availableFishTypes.map(f => f.name).join(', ')}`)
 
     // Generera 10 fångster
     for (let i = 0; i < 10; i++) {
@@ -95,11 +98,11 @@ export async function POST(request: NextRequest) {
       // Hitta motsvarande art i databasen
       const dbSpecies = species.find(s => s.name_swedish === fishType.name)
       if (!dbSpecies) {
-        console.warn(`Species not found in DB: ${fishType.name}`)
+        debugLog.push(`SKIP ${i + 1}: Species not found in DB: ${fishType.name}`)
         continue
       }
 
-      console.log(`Generating catch ${i + 1}: ${fishType.name} at ${location.name}`)
+      debugLog.push(`Generating catch ${i + 1}: ${fishType.name} at ${location.name}`)
 
       // Generera realistiska mått
       const weight = Math.round(randomInRange(fishType.minWeight, fishType.maxWeight) * 100) / 100
@@ -164,18 +167,18 @@ export async function POST(request: NextRequest) {
         .single()
 
       if (catchError) {
-        console.error('Catch insert error:', catchError)
+        debugLog.push(`ERROR ${i + 1}: ${catchError.message || JSON.stringify(catchError)}`)
       } else if (catchData) {
         generatedCatches.push(catchData)
+        debugLog.push(`SUCCESS ${i + 1}: Created catch ID ${catchData.id}`)
       }
     }
-
-    console.log(`Generated ${generatedCatches.length} catches`)
 
     return NextResponse.json({
       success: true,
       count: generatedCatches.length,
-      catches: generatedCatches
+      catches: generatedCatches,
+      debug: debugLog
     })
 
   } catch (error) {

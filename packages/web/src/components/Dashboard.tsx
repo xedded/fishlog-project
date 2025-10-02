@@ -291,8 +291,19 @@ export default function Dashboard() {
       const data = await response.json()
       console.log('Response data:', data)
 
+      // Show debug log if available
+      if (data.debug && Array.isArray(data.debug)) {
+        console.log('=== DEBUG LOG ===')
+        data.debug.forEach((msg: string) => console.log(msg))
+        console.log('=================')
+      }
+
       if (response.ok) {
-        alert(`${data.count} demofångster har genererats!`)
+        if (data.count === 0 && data.debug) {
+          alert(`Inga fångster genererades. Se konsolen för debug-info.`)
+        } else {
+          alert(`${data.count} demofångster har genererats!`)
+        }
         fetchCatches()
       } else {
         console.error('Generation error:', data)
