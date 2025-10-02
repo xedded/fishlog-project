@@ -4,6 +4,7 @@
  */
 export interface Catch {
   id: string
+  user_id: string
   species_id: string
   weight: number | null
   length: number | null
