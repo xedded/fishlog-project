@@ -87,13 +87,16 @@ Personlig fiskfångst-app med webb och mobilgränssnitt för att registrera fån
 - [x] **Demodata-generering**
   - [x] API-route för att generera 10 slumpmässiga fångster
   - [x] 15 svenska vatten med realistiska koordinater
-  - [x] 8 fiskarter med realistiska viktintervall
+  - [x] 10 fiskarter med realistiska viktintervall (matchar exakt med databas)
   - [x] Slumpmässiga datum senaste 3 månaderna
   - [x] Automatisk väderdata-hämtning för varje fångst
   - [x] Grön "Generera demodata"-knapp i UI
   - [x] Kan köras flera gånger för mer testdata
+  - [x] Använder Supabase service role key för att kringgå RLS
+  - [x] Omfattande debug-loggning för felsökning
 
 ### Fas 4 - Statistik & Foto ← EJ PÅBÖRJAD
+- [ ] Redigera befintliga fångster
 - [ ] Foto-upload funktionalitet
 - [ ] Basic statistik och listor
 - [ ] Filtrering på art/datum
@@ -179,24 +182,31 @@ fishlog-project/
 - Vindriktning konverterad till väderstreck (N, NNÖ, NÖ, ÖNÖ, etc.)
 
 **Testdata & Demodata:**
-- 10 svenska fiskarter (Gädda, Abborre, Öring, Lax, Gös, Torsk, Makrill, etc.)
-- 5 favoritplatser (Vänern, Vättern, Mörrum, etc.)
+- 10 svenska fiskarter (Gädda, Abborre, Öring, Lax, Gös, Torsk, Makrill, Regnbågslax, Sill, Karp)
 - Demodata-generator för 10 slumpmässiga fångster
 - 15 svenska vatten med realistiska koordinater
 - Automatisk väderdata för genererade fångster
+- Använder Supabase service role key för att kringgå RLS
 - Kan köras flera gånger för mer testdata
+- Debug-loggning för felsökning
 
 **Google Cloud Setup:**
-- Maps JavaScript API (för kartor och markers)
-- Geocoding API (för reverse geocoding - måste aktiveras manuellt)
+- Maps JavaScript API (för kartor och markers i frontend)
+  - API-nyckel: `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`
+  - Referer-restriktioner (endast från webbplats)
+- Geocoding API (för reverse geocoding från server)
+  - API-nyckel: `GOOGLE_GEOCODING_API_KEY` (separat server-side nyckel)
+  - Ingen referer-restriktion (används server-side)
+  - IP-restriktioner rekommenderas i produktion
 - OAuth 2.0 konfigurerad för Supabase
 
 ### 🚀 Nästa steg - Fas 4 (Statistik & Foto)
 
 **Högsta prioritet:**
-1. **Foto-upload:** Supabase Storage integration för fångstbilder
-2. **Filtrering:** Filtrera fångster på art och datumintervall
-3. **Basic statistik:**
+1. **Redigera fångster:** Klicka på en fångst för att redigera vikt, längd, plats, datum, anteckningar
+2. **Foto-upload:** Supabase Storage integration för fångstbilder
+3. **Filtrering:** Filtrera fångster på art och datumintervall
+4. **Basic statistik:**
    - Total antal fångster
    - Största fångst (vikt/längd)
    - Fångster per art (diagram)
@@ -219,20 +229,24 @@ fishlog-project/
 
 ## Kända problem och lösningar
 
-### Google Geocoding API "REQUEST_DENIED"
-**Problem:** Geocoding API returnerar REQUEST_DENIED när man försöker hämta platsnamn.
+### ✅ LÖST: Google Geocoding API "REQUEST_DENIED"
+**Problem:** Geocoding API returnerar REQUEST_DENIED pga referer-restriktioner.
 **Lösning:**
-1. Gå till Google Cloud Console
-2. Aktivera "Geocoding API" i APIs & Services → Library
-3. Appen har fallback till koordinater om API:et inte är aktiverat
+1. Skapa separat server-side API-nyckel i Google Cloud Console
+2. Sätt endast Geocoding API-restriktion (inga referer-restriktioner)
+3. Lägg till som `GOOGLE_GEOCODING_API_KEY` i .env.local och Vercel
+4. Koden använder nu separat nyckel för server-side geocoding
 
-### Demodata genererar 0 fångster
-**Problem:** Artnamn i FISH_SPECIES matchar inte exakt med databas-arter.
-**Lösning:** Kontrollera att fiskarter i databasen matchar namnen i generate-demo/route.ts
+### ✅ LÖST: Demodata genererar 0 fångster (RLS-fel)
+**Problem 1:** Artnamn i FISH_SPECIES matchade inte exakt med databas-arter.
+**Lösning 1:** Uppdaterat FISH_SPECIES till exakt samma namn som i databasen.
 
-### Användare får "okänt fel" vid registrering
+**Problem 2:** Row Level Security blockerade inserts från anonym klient.
+**Lösning 2:** Använder nu `supabaseAdmin` med `SUPABASE_SERVICE_ROLE_KEY` i generate-demo API-route.
+
+### ✅ LÖST: Användare får "okänt fel" vid registrering
 **Problem:** Otillräcklig felhantering gjorde det svårt att felsöka.
-**Lösning:** Lagt till omfattande console.error() logging och detaljerade felmeddelanden
+**Lösning:** Lagt till omfattande console.error() logging och detaljerade felmeddelanden.
 
 ## Deployment Configuration (VIKTIGT!)
 
@@ -255,7 +269,9 @@ fishlog-project/
 3. **Environment Variables i Vercel:**
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   - `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`
+   - `SUPABASE_SERVICE_ROLE_KEY` (för server-side operations, t.ex. demo data)
+   - `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` (för karta i frontend)
+   - `GOOGLE_GEOCODING_API_KEY` (för server-side geocoding)
 
 4. **Vid deployment-problem:**
    - Kontrollera att Root Directory är satt till `packages/web`
