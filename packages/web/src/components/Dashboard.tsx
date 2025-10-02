@@ -571,14 +571,7 @@ export default function Dashboard() {
             {catches.length === 0 ? (
               <div className="text-center py-12">
                 <p className={`${darkMode ? 'text-gray-400' : 'text-gray-500'} text-lg`}>{t('dashboard.noCatches')}</p>
-                <p className={`${darkMode ? 'text-gray-500' : 'text-gray-400'} mb-4`}>{t('dashboard.noCatchesDesc')}</p>
-                <button
-                  onClick={handleGenerateDemo}
-                  disabled={loading}
-                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md disabled:opacity-50"
-                >
-                  {loading ? 'Genererar...' : '🎲 Generera demodata (10 fångster)'}
-                </button>
+                <p className={`${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>{t('dashboard.noCatchesDesc')}</p>
               </div>
             ) : viewMode === 'grid' ? (
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

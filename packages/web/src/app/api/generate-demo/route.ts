@@ -70,6 +70,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'userId required' }, { status: 400 })
     }
 
+    // Säkerställ att användaren finns i users-tabellen
+    const { data: existingUser } = await supabaseAdmin
+      .from('users')
+      .select('id')
+      .eq('id', userId)
+      .single()
+
+    if (!existingUser) {
+      // Hämta email från auth.users
+      const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(userId)
+
+      // Skapa user profile om den inte finns
+      await supabaseAdmin
+        .from('users')
+        .insert({
+          id: userId,
+          email: authUser?.user?.email || 'unknown@email.com',
+          name: authUser?.user?.user_metadata?.full_name || 'Test User',
+          created_at: new Date().toISOString()
+        })
+    }
+
     // Hämta alla arter från databasen
     const { data: species, error: speciesError } = await supabaseAdmin
       .from('species')
