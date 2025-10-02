@@ -3,41 +3,18 @@
 import { APIProvider, Map, AdvancedMarker, InfoWindow, useMap } from '@vis.gl/react-google-maps'
 import { useState, useEffect } from 'react'
 import { Fish } from 'lucide-react'
-
-interface CatchData {
-  id: string
-  latitude: number
-  longitude: number
-  location_name: string
-  weight: number | null
-  length: number | null
-  caught_at: string
-  species: {
-    name_swedish: string
-    name_latin: string
-    category: string
-  }
-  weather_data?: {
-    temperature: number
-    weather_desc: string
-    wind_speed: number
-    wind_direction: number
-    pressure: number
-    humidity: number
-  }
-  notes?: string
-}
+import { Catch } from '@/types/catch'
 
 interface CatchMapProps {
-  catches: CatchData[]
+  catches: Catch[]
   apiKey: string
-  onBoundsChange?: (visibleCatches: CatchData[]) => void
+  onBoundsChange?: (visibleCatches: Catch[]) => void
   darkMode?: boolean
 }
 
-function MapContent({ catches, onBoundsChange, darkMode }: { catches: CatchData[], onBoundsChange?: (visibleCatches: CatchData[]) => void, darkMode: boolean }) {
+function MapContent({ catches, onBoundsChange, darkMode }: { catches: Catch[], onBoundsChange?: (visibleCatches: Catch[]) => void, darkMode: boolean }) {
   const map = useMap()
-  const [selectedCatch, setSelectedCatch] = useState<CatchData | null>(null)
+  const [selectedCatch, setSelectedCatch] = useState<Catch | null>(null)
 
   // Funktion för att kolla vilka fångster som är synliga
   const updateVisibleCatches = () => {

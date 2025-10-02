@@ -2,24 +2,13 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
+import { Catch } from '@/types/catch'
 import { APIProvider, Map, AdvancedMarker } from '@vis.gl/react-google-maps'
 
 interface Species {
   id: string
   name_swedish: string
   name_latin: string
-}
-
-interface Catch {
-  id: string
-  species_id: string
-  weight: number | null
-  length: number | null
-  latitude: number
-  longitude: number
-  location_name: string
-  caught_at: string
-  notes: string | null
 }
 
 interface EditCatchFormProps {

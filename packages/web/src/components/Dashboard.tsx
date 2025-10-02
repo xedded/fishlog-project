@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { supabase } from '@/lib/supabase'
+import { Catch } from '@/types/catch'
 import CatchMap from './CatchMap'
 import AddCatchForm from './AddCatchForm'
 import EditCatchForm from './EditCatchForm'
@@ -30,31 +31,6 @@ import {
   ArrowUp,
   ArrowDown
 } from 'lucide-react'
-
-interface Catch {
-  id: string
-  species_id: string
-  weight: number | null
-  length: number | null
-  latitude: number
-  longitude: number
-  location_name: string
-  caught_at: string
-  notes: string | null
-  species: {
-    name_swedish: string
-    name_latin: string
-    category: string
-  }
-  weather_data?: {
-    temperature: number
-    weather_desc: string
-    wind_speed: number
-    wind_direction: number
-    pressure: number
-    humidity: number
-  }
-}
 
 // Convert degrees to compass direction
 const degreesToCompass = (degrees: number): string => {
