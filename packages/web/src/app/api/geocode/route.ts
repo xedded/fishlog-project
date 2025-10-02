@@ -64,23 +64,27 @@ export async function GET(request: NextRequest) {
 
       // Funktion för att rensa bort onödiga delar från formatted_address
       const cleanFormattedAddress = (address: string): string => {
-        // Ta bort postnummer (5-6 siffror följt av mellanslag)
-        let cleaned = address.replace(/\b\d{3}\s?\d{2,3}\b/g, '')
-        // Ta bort "Sverige"
-        cleaned = cleaned.replace(/,?\s*Sverige\s*/gi, '')
-        // Ta bort gatuadresser (gatunamn följt av nummer)
-        cleaned = cleaned.replace(/^[^,]+\s+\d+[A-Za-z]?\s*,?\s*/i, '')
-        // Ta bort vägnamn som börjar med "Väg" eller "Unnamed Road"
-        cleaned = cleaned.replace(/^(Väg\s+[^,]+|Unnamed Road),?\s*/i, '')
-        // Rensa dubbla komman och mellanslag
-        cleaned = cleaned.replace(/,\s*,/g, ',').replace(/,\s*$/, '').trim()
+        // Ta bort postnummer (internationellt: 5-6 siffror, kan ha bokstäver)
+        let cleaned = address.replace(/\b\d{3,6}\s?\d{0,3}[A-Z]{0,2}\b/gi, '')
+        // Ta bort gatuadresser (text följt av nummer, kan ha suffix som A, 1A, etc)
+        cleaned = cleaned.replace(/^[^,]+\s+\d+[A-Za-z0-9]?\s*,?\s*/i, '')
+        // Ta bort vanliga generiska vägnamnord (internationellt)
+        cleaned = cleaned.replace(/^(Road|Street|Avenue|Väg|Gata|Unnamed\s+\w+),?\s*/i, '')
+        // Rensa dubbla komman, extra mellanslag och trailing komma
+        cleaned = cleaned.replace(/,\s*,/g, ',').replace(/\s+,/g, ',').replace(/,\s*$/, '').trim()
         return cleaned
       }
 
-      // Kontrollera om det är en gatuadress (innehåller husnummer)
+      // Kontrollera om det är en gatuadress (innehåller husnummer eller route)
       const isStreetAddress = (addressComponents: typeof components): boolean => {
-        return addressComponents.some(c => c.types.includes('street_number'))
+        return addressComponents.some(c =>
+          c.types.includes('street_number') ||
+          c.types.includes('route')
+        )
       }
+
+      // Hitta land-komponenten (för att ta bort det från slutresultatet)
+      const country = components.find((c: { types: string[] }) => c.types.includes('country'))
 
       // Kolla efter sjö/naturlig feature eller interessant plats
       const naturalFeature = components.find((c: { types: string[] }) =>
@@ -128,6 +132,13 @@ export async function GET(request: NextRequest) {
       } else {
         // Sista utväg: rensa formatted_address
         locationName = cleanFormattedAddress(bestResult.formatted_address)
+      }
+
+      // Ta bort landnamnet från slutresultatet om det finns
+      if (country && locationName.includes(country.long_name)) {
+        locationName = locationName
+          .replace(new RegExp(`,?\\s*${country.long_name}\\s*$`, 'i'), '')
+          .trim()
       }
 
       return NextResponse.json({
