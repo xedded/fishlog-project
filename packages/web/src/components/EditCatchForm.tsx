@@ -49,6 +49,7 @@ export default function EditCatchForm({ catchData, onSuccess, onCancel, darkMode
     // Detect user region from existing catch coordinates
     const region = detectContinent(catchData.latitude, catchData.longitude)
     setUserRegion(region)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [catchData.user_id])
 
   const fetchLocationName = async (lat: number, lon: number) => {
@@ -82,7 +83,7 @@ export default function EditCatchForm({ catchData, onSuccess, onCancel, darkMode
     if (data) setSpecies(data)
   }
 
-  const getSortedSpecies = (): (Species | { id: string; name_english: string; disabled: true })[] => {
+  const getSortedSpecies = (): Array<Species | { id: string; name_english: string; disabled: true }> => {
     if (species.length === 0) return []
 
     const favoriteIds = new Set(userFavorites.map(f => f.id))
@@ -93,7 +94,7 @@ export default function EditCatchForm({ catchData, onSuccess, onCancel, darkMode
       !favoriteIds.has(s.id) && s.continent !== userRegion && s.continent !== 'Global'
     )
 
-    const result: any[] = []
+    const result: Array<Species | { id: string; name_english: string; disabled: true }> = []
 
     // Add favorites
     if (userFavorites.length > 0) {

@@ -75,6 +75,7 @@ export default function AddCatchForm({ onSuccess, onCancel, userId, darkMode = f
         }
       )
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId])
 
   const fetchLocationName = async (lat: number, lon: number) => {
@@ -123,7 +124,7 @@ export default function AddCatchForm({ onSuccess, onCancel, userId, darkMode = f
     if (data) setSpecies(data)
   }
 
-  const getSortedSpecies = (): (Species | { id: string; name_english: string; disabled: true })[] => {
+  const getSortedSpecies = (): Array<Species | { id: string; name_english: string; disabled: true }> => {
     if (species.length === 0) return []
 
     const favoriteIds = new Set(userFavorites.map(f => f.id))
@@ -134,7 +135,7 @@ export default function AddCatchForm({ onSuccess, onCancel, userId, darkMode = f
       !favoriteIds.has(s.id) && s.continent !== userRegion && s.continent !== 'Global'
     )
 
-    const result: any[] = []
+    const result: Array<Species | { id: string; name_english: string; disabled: true }> = []
 
     // Add favorites
     if (userFavorites.length > 0) {
@@ -436,7 +437,7 @@ export default function AddCatchForm({ onSuccess, onCancel, userId, darkMode = f
                   setLoading(true)
 
                   // Save current catch first
-                  await handleSubmit(e as any)
+                  await handleSubmit(e as React.FormEvent<HTMLFormElement>)
 
                   // Reset only species, weight, length, quantity, notes - keep location and time
                   setFormData(prev => ({

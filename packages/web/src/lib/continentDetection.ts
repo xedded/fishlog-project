@@ -40,7 +40,10 @@ export function detectContinent(latitude: number, longitude: number): string {
 /**
  * Get user's region from their most recent catch location
  */
-export async function getUserRegion(userId: string, supabase: any): Promise<string> {
+export async function getUserRegion(
+  userId: string,
+  supabase: ReturnType<typeof import('@supabase/supabase-js').createClient>
+): Promise<string> {
   const { data, error } = await supabase
     .from('catches')
     .select('latitude, longitude')

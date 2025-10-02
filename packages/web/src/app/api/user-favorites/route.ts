@@ -34,7 +34,15 @@ export async function GET(request: NextRequest) {
     }
 
     // Count catches per species
-    const speciesCount = new Map<string, { count: number; species: any }>()
+    type SpeciesData = {
+      id: string
+      name_swedish: string
+      name_english: string
+      name_latin: string
+      category: string
+      continent: string
+    }
+    const speciesCount = new Map<string, { count: number; species: SpeciesData | SpeciesData[] | null }>()
 
     data.forEach((catch_item) => {
       const speciesId = catch_item.species_id
