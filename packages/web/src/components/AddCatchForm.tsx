@@ -154,10 +154,7 @@ export default function AddCatchForm({ onSuccess, onCancel, userId, darkMode = f
     return result
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-
+  const saveCatch = async () => {
     try {
       // 1. Fetch weather data
       const weatherUrl = `/api/weather?lat=${formData.latitude}&lon=${formData.longitude}&timestamp=${new Date(formData.caught_at).toISOString()}`
@@ -231,6 +228,16 @@ export default function AddCatchForm({ onSuccess, onCancel, userId, darkMode = f
       console.error('Full error:', error)
       const errorMessage = error instanceof Error ? error.message : 'Okänt fel'
       alert('Fel vid registrering: ' + errorMessage + '\n\nKontrollera att alla fält är korrekt ifyllda.')
+      throw error
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+
+    try {
+      await saveCatch()
     } finally {
       setLoading(false)
     }
@@ -433,24 +440,27 @@ export default function AddCatchForm({ onSuccess, onCancel, userId, darkMode = f
               </button>
               <button
                 type="button"
-                onClick={async (e) => {
-                  e.preventDefault()
+                onClick={async () => {
                   setLoading(true)
 
-                  // Save current catch first
-                  await handleSubmit(e as React.FormEvent<HTMLFormElement>)
+                  try {
+                    // Save current catch first
+                    await saveCatch()
 
-                  // Reset only species, weight, length, quantity, notes - keep location and time
-                  setFormData(prev => ({
-                    ...prev,
-                    species_id: '',
-                    weight: '',
-                    length: '',
-                    quantity: '1',
-                    notes: ''
-                  }))
-
-                  setLoading(false)
+                    // Reset only species, weight, length, quantity, notes - keep location and time
+                    setFormData(prev => ({
+                      ...prev,
+                      species_id: '',
+                      weight: '',
+                      length: '',
+                      quantity: '1',
+                      notes: ''
+                    }))
+                  } catch {
+                    // Error already handled in saveCatch
+                  } finally {
+                    setLoading(false)
+                  }
                 }}
                 disabled={loading}
                 className="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md font-medium disabled:opacity-50 text-sm"
