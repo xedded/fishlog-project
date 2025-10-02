@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
         .insert({
           id: userId,
           email: authUser?.user?.email || 'unknown@email.com',
-          name: authUser?.user?.user_metadata?.full_name || 'Test User',
+          profile_name: authUser?.user?.user_metadata?.full_name || 'Test User',
           created_at: new Date().toISOString()
         })
         .select()
