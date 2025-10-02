@@ -573,7 +573,7 @@ export default function Dashboard() {
                 <p className={`${darkMode ? 'text-gray-400' : 'text-gray-500'} text-lg`}>{t('dashboard.noCatches')}</p>
                 <p className={`${darkMode ? 'text-gray-500' : 'text-gray-400'} mb-4`}>{t('dashboard.noCatchesDesc')}</p>
                 <button
-                  onClick={generateDemoData}
+                  onClick={handleGenerateDemo}
                   disabled={loading}
                   className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md disabled:opacity-50"
                 >
