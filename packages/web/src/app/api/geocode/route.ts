@@ -62,9 +62,32 @@ export async function GET(request: NextRequest) {
         types: string[]
       }>
 
-      // Kolla efter sjö/naturlig feature
+      // Funktion för att rensa bort onödiga delar från formatted_address
+      const cleanFormattedAddress = (address: string): string => {
+        // Ta bort postnummer (5-6 siffror följt av mellanslag)
+        let cleaned = address.replace(/\b\d{3}\s?\d{2,3}\b/g, '')
+        // Ta bort "Sverige"
+        cleaned = cleaned.replace(/,?\s*Sverige\s*/gi, '')
+        // Ta bort gatuadresser (gatunamn följt av nummer)
+        cleaned = cleaned.replace(/^[^,]+\s+\d+[A-Za-z]?\s*,?\s*/i, '')
+        // Ta bort vägnamn som börjar med "Väg" eller "Unnamed Road"
+        cleaned = cleaned.replace(/^(Väg\s+[^,]+|Unnamed Road),?\s*/i, '')
+        // Rensa dubbla komman och mellanslag
+        cleaned = cleaned.replace(/,\s*,/g, ',').replace(/,\s*$/, '').trim()
+        return cleaned
+      }
+
+      // Kontrollera om det är en gatuadress (innehåller husnummer)
+      const isStreetAddress = (addressComponents: typeof components): boolean => {
+        return addressComponents.some(c => c.types.includes('street_number'))
+      }
+
+      // Kolla efter sjö/naturlig feature eller interessant plats
       const naturalFeature = components.find((c: { types: string[] }) =>
-        c.types.includes('natural_feature') || c.types.includes('establishment') || c.types.includes('park')
+        c.types.includes('natural_feature') ||
+        c.types.includes('establishment') ||
+        c.types.includes('park') ||
+        c.types.includes('point_of_interest')
       )
 
       // Kolla efter ort
@@ -73,7 +96,39 @@ export async function GET(request: NextRequest) {
       // Kolla efter kommun
       const adminArea = components.find((c: { types: string[] }) => c.types.includes('administrative_area_level_2'))
 
-      const locationName = naturalFeature?.long_name || locality?.long_name || adminArea?.long_name || bestResult.formatted_address
+      // Kolla efter sublocality eller neighborhood för mer specifik plats
+      const sublocality = components.find((c: { types: string[] }) =>
+        c.types.includes('sublocality') || c.types.includes('neighborhood')
+      )
+
+      // Bygg ett smart platsnamn
+      let locationName = ''
+
+      // Om det är en gatuadress (med husnummer), prioritera ort/område istället
+      const hasStreetAddress = isStreetAddress(components)
+
+      if (naturalFeature && !hasStreetAddress) {
+        // Om det finns en naturlig feature och inte en gatuadress, använd den + eventuell ort
+        locationName = naturalFeature.long_name
+        if (locality && locality.long_name !== naturalFeature.long_name) {
+          locationName += `, ${locality.long_name}`
+        }
+      } else if (hasStreetAddress && locality) {
+        // Om det är en gatuadress, använd bara orten (skippa adressen)
+        locationName = locality.long_name
+      } else if (sublocality && locality) {
+        // Om det finns både sublocality och locality, kombinera dem
+        locationName = `${sublocality.long_name}, ${locality.long_name}`
+      } else if (locality) {
+        // Annars bara orten
+        locationName = locality.long_name
+      } else if (adminArea) {
+        // Eller kommunen
+        locationName = adminArea.long_name
+      } else {
+        // Sista utväg: rensa formatted_address
+        locationName = cleanFormattedAddress(bestResult.formatted_address)
+      }
 
       return NextResponse.json({
         status: 'OK',
