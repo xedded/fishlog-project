@@ -172,10 +172,11 @@ export default function EditCatchForm({ catchData, onSuccess, onCancel, darkMode
                     return <option key={s.id} disabled>────────────────</option>
                   }
 
-                  const displayName = language === 'en' ? s.name_english : s.name_swedish
+                  const species = s as Species
+                  const displayName = language === 'en' ? species.name_english : species.name_swedish
                   return (
-                    <option key={s.id} value={s.id}>
-                      {displayName} ({s.name_latin})
+                    <option key={species.id} value={species.id}>
+                      {displayName} ({species.name_latin})
                     </option>
                   )
                 })}
