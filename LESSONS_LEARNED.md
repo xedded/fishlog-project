@@ -96,7 +96,41 @@ src/
 4. **Catch errors early** - TypeScript immediately shows mismatches
 5. **Better autocomplete** - IDEs work better with shared types
 
+## Pre-Push Checklist
+
+Before every `git push`, ALWAYS run these commands:
+
+```bash
+# 1. Run build to catch TypeScript/ESLint errors
+npm run build
+
+# 2. If build succeeds, commit and push
+git add -A
+git commit -m "Your message"
+git push
+```
+
+### Common Build Errors to Watch For:
+
+1. **`@typescript-eslint/no-explicit-any`**
+   - ❌ `let value: any = ...`
+   - ✅ `let value: string | Record<string, unknown> = ...`
+   - Always use specific types instead of `any`
+
+2. **Missing imports** after creating new files
+   - Check all import paths are correct
+   - Verify shared types are imported from `@/types/`
+
+3. **Unused variables**
+   - Remove or prefix with underscore: `_unusedVar`
+
+### Why This Matters:
+- Vercel build will fail if local build fails
+- Wastes deployment time and resources
+- Catches errors before they reach production
+- ESLint errors that pass in dev can fail in build
+
 ---
 
 **Date:** 2025-10-02
-**Context:** Implementing edit catch functionality (Fas 4)
+**Context:** Implementing edit catch functionality (Fas 4) & i18n support
