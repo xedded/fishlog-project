@@ -666,6 +666,11 @@ export default function Dashboard() {
                       <Fish className={`w-5 h-5 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`} />
                       <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
                         {getSpeciesName(catch_item.species)}
+                        {catch_item.quantity > 1 && (
+                          <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                            ×{catch_item.quantity}
+                          </span>
+                        )}
                       </h3>
                     </div>
 
@@ -804,7 +809,14 @@ export default function Dashboard() {
                             <td className="px-3 sm:px-4 py-3 sm:py-4 whitespace-nowrap">
                               <div className="flex items-center gap-1.5 sm:gap-2">
                                 <Fish className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`} />
-                                <span className={`text-xs sm:text-sm font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>{getSpeciesName(catch_item.species)}</span>
+                                <span className={`text-xs sm:text-sm font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                                  {getSpeciesName(catch_item.species)}
+                                </span>
+                                {catch_item.quantity > 1 && (
+                                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                                    ×{catch_item.quantity}
+                                  </span>
+                                )}
                               </div>
                             </td>
                             <td className={`px-3 sm:px-4 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>

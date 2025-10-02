@@ -37,7 +37,8 @@ export default function AddCatchForm({ onSuccess, onCancel, userId, darkMode = f
     longitude: '',
     location_name: '',
     caught_at: new Date().toISOString().slice(0, 16),
-    notes: ''
+    notes: '',
+    quantity: '1'
   })
 
   useEffect(() => {
@@ -213,7 +214,8 @@ export default function AddCatchForm({ onSuccess, onCancel, userId, darkMode = f
           location_name: formData.location_name,
           caught_at: formData.caught_at,
           notes: formData.notes || null,
-          weather_id: weatherId
+          weather_id: weatherId,
+          quantity: formData.quantity ? parseInt(formData.quantity) : 1
         })
         .select()
         .single()
@@ -267,8 +269,8 @@ export default function AddCatchForm({ onSuccess, onCancel, userId, darkMode = f
               </select>
             </div>
 
-            {/* Vikt och Längd */}
-            <div className="grid grid-cols-2 gap-4">
+            {/* Vikt, Längd och Antal */}
+            <div className="grid grid-cols-3 gap-4">
               <div>
                 <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
                   Vikt (kg)
@@ -293,6 +295,19 @@ export default function AddCatchForm({ onSuccess, onCancel, userId, darkMode = f
                   onChange={(e) => setFormData({ ...formData, length: e.target.value })}
                   className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 text-gray-900'}`}
                   placeholder="45.5 (eller lämna tom för okänd)"
+                />
+              </div>
+              <div>
+                <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
+                  Antal
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={formData.quantity}
+                  onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
                 />
               </div>
             </div>
@@ -416,8 +431,34 @@ export default function AddCatchForm({ onSuccess, onCancel, userId, darkMode = f
               </button>
               <button
                 type="button"
+                onClick={async (e) => {
+                  e.preventDefault()
+                  setLoading(true)
+
+                  // Save current catch first
+                  await handleSubmit(e as any)
+
+                  // Reset only species, weight, length, quantity, notes - keep location and time
+                  setFormData(prev => ({
+                    ...prev,
+                    species_id: '',
+                    weight: '',
+                    length: '',
+                    quantity: '1',
+                    notes: ''
+                  }))
+
+                  setLoading(false)
+                }}
+                disabled={loading}
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md font-medium disabled:opacity-50 text-sm"
+              >
+                Registrera fler här
+              </button>
+              <button
+                type="button"
                 onClick={onCancel}
-                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md font-medium"
+                className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-md font-medium"
               >
                 Avbryt
               </button>

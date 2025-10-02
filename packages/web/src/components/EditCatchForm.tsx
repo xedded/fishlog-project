@@ -34,6 +34,7 @@ export default function EditCatchForm({ catchData, onSuccess, onCancel, darkMode
     species_id: catchData.species_id,
     weight: catchData.weight?.toString() || '',
     length: catchData.length?.toString() || '',
+    quantity: catchData.quantity?.toString() || '1',
     latitude: catchData.latitude.toString(),
     longitude: catchData.longitude.toString(),
     location_name: catchData.location_name,
@@ -122,6 +123,7 @@ export default function EditCatchForm({ catchData, onSuccess, onCancel, darkMode
           species_id: formData.species_id,
           weight: formData.weight ? parseFloat(formData.weight) : null,
           length: formData.length ? parseFloat(formData.length) : null,
+          quantity: formData.quantity ? parseInt(formData.quantity) : 1,
           latitude: parseFloat(formData.latitude),
           longitude: parseFloat(formData.longitude),
           location_name: formData.location_name,
@@ -179,8 +181,8 @@ export default function EditCatchForm({ catchData, onSuccess, onCancel, darkMode
               </select>
             </div>
 
-            {/* Vikt och Längd */}
-            <div className="grid grid-cols-2 gap-4">
+            {/* Vikt, Längd och Antal */}
+            <div className="grid grid-cols-3 gap-4">
               <div>
                 <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
                   Vikt (kg)
@@ -205,6 +207,19 @@ export default function EditCatchForm({ catchData, onSuccess, onCancel, darkMode
                   onChange={(e) => setFormData({ ...formData, length: e.target.value })}
                   className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 text-gray-900'}`}
                   placeholder="45.5"
+                />
+              </div>
+              <div>
+                <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
+                  Antal
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={formData.quantity}
+                  onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
                 />
               </div>
             </div>

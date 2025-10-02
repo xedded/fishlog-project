@@ -12,6 +12,7 @@ export interface Catch {
   location_name: string
   caught_at: string
   notes: string | null
+  quantity: number
   species: {
     name_swedish: string
     name_english: string
