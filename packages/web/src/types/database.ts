@@ -69,7 +69,11 @@ export interface DatabaseFavoriteLocation {
 }
 
 // Insert types (for creating new records - omit auto-generated fields)
-export type DatabaseUserInsert = Omit<DatabaseUser, 'created_at' | 'updated_at'> & {
+export type DatabaseUserInsert = {
+  id: string
+  email: string
+  profile_name?: string | null
+  avatar_url?: string | null
   created_at?: string
   updated_at?: string
 }
