@@ -56,5 +56,6 @@ export async function getUserRegion(
     return 'Europe' // Default to Europe if no catches
   }
 
-  return detectContinent(data.latitude, data.longitude)
+  const catchData = data as { latitude: number; longitude: number }
+  return detectContinent(catchData.latitude, catchData.longitude)
 }
