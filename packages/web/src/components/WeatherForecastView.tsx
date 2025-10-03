@@ -85,7 +85,7 @@ export default function WeatherForecastView({ darkMode = false, latitude: initia
     }
   }
 
-  const handleMapClick = (event: any) => {
+  const handleMapClick = (event: { detail?: { latLng?: { lat: number; lng: number } } }) => {
     if (event.detail?.latLng) {
       setSelectedLocation({
         lat: event.detail.latLng.lat,

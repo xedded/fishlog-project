@@ -2,7 +2,7 @@
 
 import { APIProvider, Map, AdvancedMarker, InfoWindow, useMap } from '@vis.gl/react-google-maps'
 import { useState, useEffect } from 'react'
-import { Fish, Flame } from 'lucide-react'
+import { Fish } from 'lucide-react'
 import { Catch } from '@/types/catch'
 
 interface CatchMapProps {
