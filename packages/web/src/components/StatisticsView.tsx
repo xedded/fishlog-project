@@ -9,9 +9,11 @@ import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Cart
 interface StatisticsViewProps {
   catches: Catch[]
   darkMode?: boolean
+  showFilters?: boolean
+  showOnlyRecords?: boolean
 }
 
-export default function StatisticsView({ catches, darkMode = false }: StatisticsViewProps) {
+export default function StatisticsView({ catches, darkMode = false, showFilters = false, showOnlyRecords = false }: StatisticsViewProps) {
   const { language } = useLanguage()
   const [unitSystem, setUnitSystem] = useState<'metric' | 'imperial'>('metric')
 
@@ -131,10 +133,11 @@ export default function StatisticsView({ catches, darkMode = false }: Statistics
     return acc
   }, {} as Record<string, number>)
 
-  const topLocations = Object.entries(catchesByLocation)
+  const allLocations = Object.entries(catchesByLocation)
     .sort(([, a], [, b]) => b - a)
-    .slice(0, 10)
     .map(([name, count]) => ({ name, count }))
+
+  const topLocations = allLocations.slice(0, 15)
 
   // Weather correlation
   const weatherStats = catches
@@ -176,8 +179,13 @@ export default function StatisticsView({ catches, darkMode = false }: Statistics
     count: catchesByHour[i] || 0
   }))
 
-  // Pie chart colors
-  const COLORS = ['#3b82f6', '#8b5cf6', '#ef4444', '#f59e0b', '#10b981', '#ec4899', '#06b6d4', '#f97316']
+  // Pie chart colors - brighter for better contrast in dark mode
+  const COLORS = ['#60a5fa', '#a78bfa', '#f87171', '#fbbf24', '#34d399', '#f472b6', '#22d3ee', '#fb923c']
+
+  // Custom label for pie chart
+  const renderCustomLabel = (entry: any) => {
+    return `${entry.name}: ${entry.value}`
+  }
 
   if (catches.length === 0) {
     return (
@@ -186,6 +194,62 @@ export default function StatisticsView({ catches, darkMode = false }: Statistics
         <p className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
           {language === 'en' ? 'No catches yet - start logging to see statistics!' : 'Inga fångster än - börja logga för att se statistik!'}
         </p>
+      </div>
+    )
+  }
+
+  // If showOnlyRecords is true, render only Personal Bests section
+  if (showOnlyRecords) {
+    return (
+      <div className="space-y-6">
+        {/* Personal Bests (PB) */}
+        <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-md p-6`}>
+          <div className="flex items-center gap-2 mb-6">
+            <Trophy className={`w-6 h-6 ${darkMode ? 'text-yellow-400' : 'text-yellow-600'}`} />
+            <h3 className={`text-xl font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+              {language === 'en' ? 'Personal Bests' : 'Personliga rekord'}
+            </h3>
+          </div>
+          {personalBests.length === 0 ? (
+            <p className={`text-center ${darkMode ? 'text-gray-400' : 'text-gray-600'} py-8`}>
+              {language === 'en' ? 'No records yet - add weight or length data to your catches!' : 'Inga rekord än - lägg till vikt- eller längddata på dina fångster!'}
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {personalBests.map((pb, index) => (
+                <div key={index} className={`${darkMode ? 'bg-gray-700' : 'bg-gray-50'} rounded-lg p-4 hover:shadow-md transition-shadow`}>
+                  <h4 className={`font-semibold text-lg mb-3 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                    {pb.name}
+                  </h4>
+                  <div className="space-y-2">
+                    {pb.weight > 0 && (
+                      <div className="flex items-center gap-2">
+                        <Award className={`w-4 h-4 ${darkMode ? 'text-yellow-400' : 'text-yellow-600'}`} />
+                        <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                          {language === 'en' ? 'Weight:' : 'Vikt:'}
+                        </span>
+                        <span className={`ml-auto font-bold text-lg ${darkMode ? 'text-yellow-400' : 'text-yellow-600'}`}>
+                          {convertWeight(pb.weight)} {weightUnit}
+                        </span>
+                      </div>
+                    )}
+                    {pb.length > 0 && (
+                      <div className="flex items-center gap-2">
+                        <TrendingUp className={`w-4 h-4 ${darkMode ? 'text-purple-400' : 'text-purple-600'}`} />
+                        <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                          {language === 'en' ? 'Length:' : 'Längd:'}
+                        </span>
+                        <span className={`ml-auto font-bold text-lg ${darkMode ? 'text-purple-400' : 'text-purple-600'}`}>
+                          {pb.length} cm
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     )
   }
@@ -304,7 +368,8 @@ export default function StatisticsView({ catches, darkMode = false }: Statistics
                 cx="50%"
                 cy="50%"
                 outerRadius={80}
-                label
+                label={renderCustomLabel}
+                labelLine={{ stroke: darkMode ? '#9ca3af' : '#6b7280' }}
               >
                 {sortedSpecies.slice(0, 8).map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -313,8 +378,12 @@ export default function StatisticsView({ catches, darkMode = false }: Statistics
               <Tooltip
                 contentStyle={{
                   backgroundColor: darkMode ? '#1f2937' : '#ffffff',
-                  border: `1px solid ${darkMode ? '#374151' : '#e5e7eb'}`
+                  border: `1px solid ${darkMode ? '#374151' : '#e5e7eb'}`,
+                  color: darkMode ? '#ffffff' : '#000000'
                 }}
+              />
+              <Legend
+                wrapperStyle={{ color: darkMode ? '#ffffff' : '#000000' }}
               />
             </PieChart>
           </ResponsiveContainer>
@@ -328,18 +397,25 @@ export default function StatisticsView({ catches, darkMode = false }: Statistics
           <div className="flex items-center gap-2 mb-4">
             <MapPin className={`w-5 h-5 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`} />
             <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-              {language === 'en' ? 'Top Locations' : 'Bästa platserna'}
+              {language === 'en' ? `Top Locations (${topLocations.length})` : `Bästa platserna (${topLocations.length})`}
             </h3>
           </div>
-          <ResponsiveContainer width="100%" height={250}>
+          <ResponsiveContainer width="100%" height={Math.max(250, topLocations.length * 25)}>
             <BarChart data={topLocations} layout="vertical">
               <CartesianGrid strokeDasharray="3 3" stroke={darkMode ? '#374151' : '#e5e7eb'} />
               <XAxis type="number" stroke={darkMode ? '#9ca3af' : '#6b7280'} />
-              <YAxis dataKey="name" type="category" width={100} stroke={darkMode ? '#9ca3af' : '#6b7280'} />
+              <YAxis
+                dataKey="name"
+                type="category"
+                width={150}
+                stroke={darkMode ? '#9ca3af' : '#6b7280'}
+                tick={{ fontSize: 12 }}
+              />
               <Tooltip
                 contentStyle={{
                   backgroundColor: darkMode ? '#1f2937' : '#ffffff',
-                  border: `1px solid ${darkMode ? '#374151' : '#e5e7eb'}`
+                  border: `1px solid ${darkMode ? '#374151' : '#e5e7eb'}`,
+                  color: darkMode ? '#ffffff' : '#000000'
                 }}
               />
               <Bar dataKey="count" fill="#10b981" />
@@ -398,37 +474,6 @@ export default function StatisticsView({ catches, darkMode = false }: Statistics
           </div>
         </div>
       )}
-
-      {/* Personal Bests (PB) */}
-      <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-md p-6`}>
-        <div className="flex items-center gap-2 mb-4">
-          <Trophy className={`w-5 h-5 ${darkMode ? 'text-yellow-400' : 'text-yellow-600'}`} />
-          <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-            {language === 'en' ? 'Personal Bests' : 'Personliga rekord'}
-          </h3>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {personalBests.map((pb, index) => (
-            <div key={index} className={`${darkMode ? 'bg-gray-700' : 'bg-gray-50'} rounded-lg p-4`}>
-              <h4 className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                {pb.name}
-              </h4>
-              <div className="mt-2 space-y-1">
-                {pb.weight > 0 && (
-                  <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                    {language === 'en' ? 'Weight:' : 'Vikt:'} <span className="font-semibold">{convertWeight(pb.weight)} {weightUnit}</span>
-                  </p>
-                )}
-                {pb.length > 0 && (
-                  <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                    {language === 'en' ? 'Length:' : 'Längd:'} <span className="font-semibold">{pb.length} cm</span>
-                  </p>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
 
       {/* Per Species Table */}
       <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-md overflow-hidden`}>

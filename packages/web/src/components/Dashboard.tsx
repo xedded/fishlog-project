@@ -36,7 +36,8 @@ import {
   Settings,
   Check,
   Filter,
-  X
+  X,
+  Trophy
 } from 'lucide-react'
 
 // Convert degrees to compass direction
@@ -55,7 +56,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [showAddForm, setShowAddForm] = useState(false)
   const [editingCatch, setEditingCatch] = useState<Catch | null>(null)
-  const [activeTab, setActiveTab] = useState<'catches' | 'statistics'>('catches')
+  const [activeTab, setActiveTab] = useState<'catches' | 'statistics' | 'records'>('catches')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [showSettings, setShowSettings] = useState(false)
   const [filterSpecies, setFilterSpecies] = useState<string>('')
@@ -597,6 +598,19 @@ export default function Dashboard() {
                     {language === 'en' ? 'Statistics' : 'Statistik'}
                   </div>
                 </button>
+                <button
+                  onClick={() => setActiveTab('records')}
+                  className={`px-4 py-3 border-b-2 font-medium transition-colors ${
+                    activeTab === 'records'
+                      ? `${darkMode ? 'border-blue-400 text-blue-400' : 'border-blue-600 text-blue-600'}`
+                      : `border-transparent ${darkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-600 hover:text-gray-900'}`
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <Trophy className="w-5 h-5" />
+                    {language === 'en' ? 'Personal Bests' : 'Personliga rekord'}
+                  </div>
+                </button>
               </nav>
             </div>
           </div>
@@ -1101,9 +1115,97 @@ export default function Dashboard() {
             )}
               </div>
             </>
-          ) : (
+          ) : activeTab === 'statistics' ? (
             /* Statistics Tab */
-            <StatisticsView catches={catches} darkMode={darkMode} />
+            <>
+              {/* Filters for Statistics */}
+              {catches.length > 0 && (
+                <div className={`mb-4 p-4 rounded-lg ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'} border`}>
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                    <div className="flex items-center gap-2">
+                      <Filter className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`} />
+                      <span className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                        Filter:
+                      </span>
+                    </div>
+
+                    <div className="flex flex-wrap gap-3 flex-1">
+                      {/* Species filter */}
+                      {uniqueSpecies.length > 0 && (
+                        <select
+                          value={filterSpecies}
+                          onChange={(e) => setFilterSpecies(e.target.value)}
+                          className={`px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                            darkMode
+                              ? 'bg-gray-700 border-gray-600 text-white'
+                              : 'bg-white border-gray-300 text-gray-900'
+                          }`}
+                        >
+                          <option value="">{language === 'en' ? 'All species' : 'Alla arter'}</option>
+                          {uniqueSpecies.map(species => (
+                            <option key={species.id} value={species.id}>
+                              {language === 'en' ? species.name_english : species.name_swedish}
+                            </option>
+                          ))}
+                        </select>
+                      )}
+
+                      {/* Date from */}
+                      <input
+                        type="date"
+                        value={filterDateFrom}
+                        onChange={(e) => setFilterDateFrom(e.target.value)}
+                        placeholder={language === 'en' ? 'From date' : 'Från datum'}
+                        className={`px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                          darkMode
+                            ? 'bg-gray-700 border-gray-600 text-white'
+                            : 'bg-white border-gray-300 text-gray-900'
+                        }`}
+                      />
+
+                      {/* Date to */}
+                      <input
+                        type="date"
+                        value={filterDateTo}
+                        onChange={(e) => setFilterDateTo(e.target.value)}
+                        placeholder={language === 'en' ? 'To date' : 'Till datum'}
+                        className={`px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                          darkMode
+                            ? 'bg-gray-700 border-gray-600 text-white'
+                            : 'bg-white border-gray-300 text-gray-900'
+                        }`}
+                      />
+
+                      {/* Clear filters button */}
+                      {hasActiveFilters && (
+                        <button
+                          onClick={clearFilters}
+                          className={`flex items-center gap-1 px-3 py-1.5 text-sm rounded-md transition-colors ${
+                            darkMode
+                              ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                              : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                          }`}
+                        >
+                          <X className="w-3 h-3" />
+                          <span>{language === 'en' ? 'Clear' : 'Rensa'}</span>
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Active filter count */}
+                    {hasActiveFilters && (
+                      <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                        {filterCatches(catches).length} {language === 'en' ? 'of' : 'av'} {catches.length}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+              <StatisticsView catches={filterCatches(catches)} darkMode={darkMode} />
+            </>
+          ) : (
+            /* Personal Records Tab */
+            <StatisticsView catches={catches} darkMode={darkMode} showOnlyRecords={true} />
           )}
         </div>
       </main>
