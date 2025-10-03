@@ -32,7 +32,9 @@ import {
   ArrowUp,
   ArrowDown,
   Settings,
-  Check
+  Check,
+  Filter,
+  X
 } from 'lucide-react'
 
 // Convert degrees to compass direction
@@ -53,6 +55,9 @@ export default function Dashboard() {
   const [editingCatch, setEditingCatch] = useState<Catch | null>(null)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [showSettings, setShowSettings] = useState(false)
+  const [filterSpecies, setFilterSpecies] = useState<string>('')
+  const [filterDateFrom, setFilterDateFrom] = useState<string>('')
+  const [filterDateTo, setFilterDateTo] = useState<string>('')
   const [darkMode, setDarkMode] = useState(() => {
     // Initialize from localStorage or default to true
     if (typeof window !== 'undefined') {
@@ -231,6 +236,54 @@ export default function Dashboard() {
     }
     setLoading(false)
   }
+
+  // Get unique species from catches for filter dropdown
+  const uniqueSpecies = catches.reduce((acc, catchItem) => {
+    if (!acc.find(s => s.id === catchItem.species_id)) {
+      acc.push({
+        id: catchItem.species_id,
+        name_english: catchItem.species.name_english,
+        name_swedish: catchItem.species.name_swedish
+      })
+    }
+    return acc
+  }, [] as Array<{ id: string; name_english: string; name_swedish: string }>)
+  .sort((a, b) => {
+    const nameA = language === 'en' ? a.name_english : a.name_swedish
+    const nameB = language === 'en' ? b.name_english : b.name_swedish
+    return nameA.localeCompare(nameB)
+  })
+
+  const filterCatches = (catches: Catch[]) => {
+    return catches.filter(catchItem => {
+      // Filter by species
+      if (filterSpecies && catchItem.species_id !== filterSpecies) {
+        return false
+      }
+
+      // Filter by date range
+      const catchDate = new Date(catchItem.caught_at)
+      if (filterDateFrom) {
+        const fromDate = new Date(filterDateFrom)
+        if (catchDate < fromDate) return false
+      }
+      if (filterDateTo) {
+        const toDate = new Date(filterDateTo)
+        toDate.setHours(23, 59, 59, 999) // Include entire end date
+        if (catchDate > toDate) return false
+      }
+
+      return true
+    })
+  }
+
+  const clearFilters = () => {
+    setFilterSpecies('')
+    setFilterDateFrom('')
+    setFilterDateTo('')
+  }
+
+  const hasActiveFilters = filterSpecies || filterDateFrom || filterDateTo
 
   const sortCatches = (catches: Catch[]) => {
     const sorted = [...catches].sort((a, b) => {
@@ -569,6 +622,90 @@ export default function Dashboard() {
               </div>
             </div>
 
+            {/* Filters */}
+            {catches.length > 0 && (
+              <div className={`mb-4 p-4 rounded-lg ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'} border`}>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <Filter className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`} />
+                    <span className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                      Filter:
+                    </span>
+                  </div>
+
+                  <div className="flex flex-wrap gap-3 flex-1">
+                    {/* Species filter */}
+                    {uniqueSpecies.length > 0 && (
+                      <select
+                        value={filterSpecies}
+                        onChange={(e) => setFilterSpecies(e.target.value)}
+                        className={`px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                          darkMode
+                            ? 'bg-gray-700 border-gray-600 text-white'
+                            : 'bg-white border-gray-300 text-gray-900'
+                        }`}
+                      >
+                        <option value="">Alla arter</option>
+                        {uniqueSpecies.map(species => (
+                          <option key={species.id} value={species.id}>
+                            {language === 'en' ? species.name_english : species.name_swedish}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+
+                    {/* Date from */}
+                    <input
+                      type="date"
+                      value={filterDateFrom}
+                      onChange={(e) => setFilterDateFrom(e.target.value)}
+                      placeholder="Från datum"
+                      className={`px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                        darkMode
+                          ? 'bg-gray-700 border-gray-600 text-white'
+                          : 'bg-white border-gray-300 text-gray-900'
+                      }`}
+                    />
+
+                    {/* Date to */}
+                    <input
+                      type="date"
+                      value={filterDateTo}
+                      onChange={(e) => setFilterDateTo(e.target.value)}
+                      placeholder="Till datum"
+                      className={`px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                        darkMode
+                          ? 'bg-gray-700 border-gray-600 text-white'
+                          : 'bg-white border-gray-300 text-gray-900'
+                      }`}
+                    />
+
+                    {/* Clear filters button */}
+                    {hasActiveFilters && (
+                      <button
+                        onClick={clearFilters}
+                        className={`flex items-center gap-1 px-3 py-1.5 text-sm rounded-md transition-colors ${
+                          darkMode
+                            ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                            : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                        }`}
+                      >
+                        <X className="w-3 h-3" />
+                        <span>Rensa</span>
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Active filter count */}
+                  {hasActiveFilters && (
+                    <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                      {filterCatches(catches).length} av {catches.length}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {catches.length === 0 ? (
               <div className="text-center py-12">
                 <p className={`${darkMode ? 'text-gray-400' : 'text-gray-500'} text-lg`}>{t('dashboard.noCatches')}</p>
@@ -576,7 +713,7 @@ export default function Dashboard() {
               </div>
             ) : viewMode === 'grid' ? (
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {sortCatches(visibleCatches.length > 0 ? visibleCatches : catches).map((catch_item) => (
+                {sortCatches(filterCatches(visibleCatches.length > 0 ? visibleCatches : catches)).map((catch_item) => (
                   <div key={catch_item.id} className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-xl border shadow-sm hover:shadow-md transition-shadow p-5 relative`}>
                     <div className="absolute top-3 right-3 flex gap-1">
                       <button
@@ -745,7 +882,7 @@ export default function Dashboard() {
                     </tr>
                   </thead>
                   <tbody className={`${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
-                    {sortCatches(visibleCatches.length > 0 ? visibleCatches : catches).map((catch_item) => {
+                    {sortCatches(filterCatches(visibleCatches.length > 0 ? visibleCatches : catches)).map((catch_item) => {
                       const isExpanded = expandedRows.has(catch_item.id)
                       return (
                         <React.Fragment key={catch_item.id}>
