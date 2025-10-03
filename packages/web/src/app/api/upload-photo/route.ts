@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
     const fileBuffer = new Uint8Array(arrayBuffer)
 
     // Upload to Supabase Storage
-    const { data: uploadData, error: uploadError } = await supabaseAdmin
+    const { error: uploadError } = await supabaseAdmin
       .storage
       .from('catch-photos')
       .upload(filePath, fileBuffer, {

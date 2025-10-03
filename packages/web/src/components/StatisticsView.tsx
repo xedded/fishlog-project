@@ -13,7 +13,7 @@ interface StatisticsViewProps {
   showOnlyRecords?: boolean
 }
 
-export default function StatisticsView({ catches, darkMode = false, showFilters = false, showOnlyRecords = false }: StatisticsViewProps) {
+export default function StatisticsView({ catches, darkMode = false, showOnlyRecords = false }: StatisticsViewProps) {
   const { language } = useLanguage()
   const [unitSystem, setUnitSystem] = useState<'metric' | 'imperial'>('metric')
 
@@ -183,8 +183,9 @@ export default function StatisticsView({ catches, darkMode = false, showFilters 
   const COLORS = ['#60a5fa', '#a78bfa', '#f87171', '#fbbf24', '#34d399', '#f472b6', '#22d3ee', '#fb923c']
 
   // Custom label for pie chart
-  const renderCustomLabel = (entry: any) => {
-    return `${entry.name}: ${entry.value}`
+  const renderCustomLabel = (props: { name?: string; value?: number }) => {
+    if (!props.name || !props.value) return ''
+    return `${props.name}: ${props.value}`
   }
 
   if (catches.length === 0) {
