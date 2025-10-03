@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import type { DatabasePhotoInsert } from '@/types/database'
 
+// Configure for larger payloads
+export const runtime = 'nodejs' // Use Node.js runtime instead of Edge
+export const maxDuration = 30 // Max 30 seconds
+
 // Create Supabase client with service role key
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -14,7 +18,7 @@ const supabaseAdmin = createClient(
   }
 )
 
-// Max file size: 5MB
+// Max file size: 5MB (but client-side compression should keep it under 500KB)
 const MAX_FILE_SIZE = 5 * 1024 * 1024
 
 export async function POST(request: NextRequest) {
@@ -134,29 +138,18 @@ export async function POST(request: NextRequest) {
 // DELETE endpoint to remove photos
 export async function DELETE(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const photoId = searchParams.get('photoId')
+    const body = await request.json()
+    const { photoId, filePath } = body
 
-    if (!photoId) {
-      return NextResponse.json({ error: 'Missing photoId' }, { status: 400 })
+    if (!photoId || !filePath) {
+      return NextResponse.json({ error: 'Missing photoId or filePath' }, { status: 400 })
     }
 
-    // Get photo metadata to find file path
-    const { data: photo, error: fetchError } = await supabaseAdmin
-      .from('photos')
-      .select('file_path')
-      .eq('id', photoId)
-      .single()
-
-    if (fetchError || !photo) {
-      return NextResponse.json({ error: 'Photo not found' }, { status: 404 })
-    }
-
-    // Delete from storage
+    // Delete from storage first
     const { error: storageError } = await supabaseAdmin
       .storage
       .from('catch-photos')
-      .remove([photo.file_path])
+      .remove([filePath])
 
     if (storageError) {
       console.error('Storage delete error:', storageError)

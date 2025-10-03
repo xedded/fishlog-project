@@ -6,6 +6,8 @@ import { Catch } from '@/types/catch'
 import { APIProvider, Map, AdvancedMarker } from '@vis.gl/react-google-maps'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { detectContinent } from '@/lib/continentDetection'
+import imageCompression from 'browser-image-compression'
+import { X } from 'lucide-react'
 
 interface Species {
   id: string
@@ -29,6 +31,8 @@ export default function EditCatchForm({ catchData, onSuccess, onCancel, darkMode
   const [userRegion, setUserRegion] = useState<string>('Europe')
   const [loading, setLoading] = useState(false)
   const [useMapPicker, setUseMapPicker] = useState(false)
+  const [existingPhotos, setExistingPhotos] = useState(catchData.photos || [])
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([])
   const [formData, setFormData] = useState({
     species_id: catchData.species_id,
     weight: catchData.weight?.toString() || '',
@@ -110,6 +114,67 @@ export default function EditCatchForm({ catchData, onSuccess, onCancel, darkMode
     return result
   }
 
+  const deletePhoto = async (photoId: string, filePath: string) => {
+    try {
+      const response = await fetch('/api/upload-photo', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ photoId, filePath })
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to delete photo')
+      }
+
+      // Remove from local state
+      setExistingPhotos(existingPhotos.filter(p => p.id !== photoId))
+    } catch (error) {
+      console.error('Photo delete error:', error)
+      alert('Kunde inte radera foto')
+    }
+  }
+
+  const uploadPhotos = async (catchId: string) => {
+    if (selectedFiles.length === 0) return
+
+    for (const file of selectedFiles) {
+      try {
+        // Compress image before upload - more aggressive settings
+        const options = {
+          maxSizeMB: 0.5, // Max 500KB
+          maxWidthOrHeight: 1200, // Max dimension 1200px
+          useWebWorker: true,
+          fileType: 'image/jpeg',
+          initialQuality: 0.7 // Lower quality for smaller size
+        }
+
+        console.log(`Original file size: ${(file.size / 1024 / 1024).toFixed(2)} MB`)
+        const compressedFile = await imageCompression(file, options)
+        console.log(`Compressed file size: ${(compressedFile.size / 1024 / 1024).toFixed(2)} MB`)
+
+        const formData = new FormData()
+        formData.append('file', compressedFile)
+        formData.append('catchId', catchId)
+        formData.append('userId', catchData.user_id)
+
+        const response = await fetch('/api/upload-photo', {
+          method: 'POST',
+          body: formData
+        })
+
+        if (!response.ok) {
+          const errorText = await response.text()
+          console.error('Photo upload failed:', response.status, errorText)
+        } else {
+          const result = await response.json()
+          console.log('Photo uploaded successfully:', result.photo.id)
+        }
+      } catch (error) {
+        console.error('Photo upload error:', error)
+      }
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -133,6 +198,11 @@ export default function EditCatchForm({ catchData, onSuccess, onCancel, darkMode
       if (error) {
         console.error('Update error:', error)
         throw new Error(error.message || 'Kunde inte uppdatera fångsten')
+      }
+
+      // Upload new photos if any
+      if (selectedFiles.length > 0) {
+        await uploadPhotos(catchData.id)
       }
 
       onSuccess()
@@ -321,6 +391,59 @@ export default function EditCatchForm({ catchData, onSuccess, onCancel, darkMode
                 className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 text-gray-900'}`}
                 placeholder="Bra fiske med wobbler vid gräsbänk..."
               />
+            </div>
+
+            {/* Befintliga foton */}
+            {existingPhotos.length > 0 && (
+              <div>
+                <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                  Befintliga foton
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {existingPhotos.map((photo) => {
+                    const publicUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/catch-photos/${photo.file_path}`
+                    return (
+                      <div key={photo.id} className="relative group">
+                        <img
+                          src={publicUrl}
+                          className="w-full h-24 object-cover rounded-lg"
+                          alt="Catch photo"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => deletePhoto(photo.id, photo.file_path)}
+                          className="absolute top-1 right-1 bg-red-600 hover:bg-red-700 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Ladda upp nya foton */}
+            <div>
+              <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
+                Lägg till foton
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={(e) => {
+                  if (e.target.files) {
+                    setSelectedFiles(Array.from(e.target.files))
+                  }
+                }}
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+              />
+              {selectedFiles.length > 0 && (
+                <p className={`text-sm mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  {selectedFiles.length} fil(er) valda
+                </p>
+              )}
             </div>
 
             {/* Knappar */}

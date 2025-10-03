@@ -556,7 +556,7 @@ export default function Dashboard() {
                 </h2>
               </div>
               <CatchMap
-                catches={catches}
+                catches={filterCatches(catches)}
                 apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ''}
                 onBoundsChange={setVisibleCatches}
                 darkMode={darkMode}

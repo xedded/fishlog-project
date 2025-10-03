@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase'
 import { APIProvider, Map, AdvancedMarker } from '@vis.gl/react-google-maps'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { detectContinent } from '@/lib/continentDetection'
+import imageCompression from 'browser-image-compression'
 
 interface Species {
   id: string
@@ -155,12 +156,25 @@ export default function AddCatchForm({ onSuccess, onCancel, userId, darkMode = f
     if (selectedFiles.length === 0) return
 
     for (const file of selectedFiles) {
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('catchId', catchId)
-      formData.append('userId', userId)
-
       try {
+        // Compress image before upload - more aggressive settings
+        const options = {
+          maxSizeMB: 0.5, // Max 500KB
+          maxWidthOrHeight: 1200, // Max dimension 1200px
+          useWebWorker: true,
+          fileType: 'image/jpeg',
+          initialQuality: 0.7 // Lower quality for smaller size
+        }
+
+        console.log(`Original file size: ${(file.size / 1024 / 1024).toFixed(2)} MB`)
+        const compressedFile = await imageCompression(file, options)
+        console.log(`Compressed file size: ${(compressedFile.size / 1024 / 1024).toFixed(2)} MB`)
+
+        const formData = new FormData()
+        formData.append('file', compressedFile)
+        formData.append('catchId', catchId)
+        formData.append('userId', userId)
+
         const response = await fetch('/api/upload-photo', {
           method: 'POST',
           body: formData
@@ -169,7 +183,6 @@ export default function AddCatchForm({ onSuccess, onCancel, userId, darkMode = f
         if (!response.ok) {
           const errorText = await response.text()
           console.error('Photo upload failed:', response.status, errorText)
-          // Try to parse as JSON if possible
           try {
             const errorJson = JSON.parse(errorText)
             console.error('Error details:', errorJson)
