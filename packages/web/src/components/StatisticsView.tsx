@@ -1,8 +1,8 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { Catch } from '@/types/catch'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { useSettings } from '@/contexts/SettingsContext'
 import { Fish, TrendingUp, Award, Hash } from 'lucide-react'
 
 interface StatisticsViewProps {
@@ -12,7 +12,14 @@ interface StatisticsViewProps {
 
 export default function StatisticsView({ catches, darkMode = false }: StatisticsViewProps) {
   const { language } = useLanguage()
-  const { unitSystem } = useSettings()
+  const [unitSystem, setUnitSystem] = useState<'metric' | 'imperial'>('metric')
+
+  useEffect(() => {
+    const saved = localStorage.getItem('fishlog-unit-system')
+    if (saved === 'imperial' || saved === 'metric') {
+      setUnitSystem(saved)
+    }
+  }, [])
 
   // Convert weight based on unit system
   const convertWeight = (kg: number | null) => {
