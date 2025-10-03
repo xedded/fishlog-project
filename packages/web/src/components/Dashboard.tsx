@@ -73,6 +73,14 @@ export default function Dashboard() {
   const [filterSpecies, setFilterSpecies] = useState<string>('')
   const [filterDateFrom, setFilterDateFrom] = useState<string>('')
   const [filterDateTo, setFilterDateTo] = useState<string>('')
+  const [filterLocation, setFilterLocation] = useState<string>('')
+  const [filterWeightMin, setFilterWeightMin] = useState<string>('')
+  const [filterWeightMax, setFilterWeightMax] = useState<string>('')
+  const [filterLengthMin, setFilterLengthMin] = useState<string>('')
+  const [filterLengthMax, setFilterLengthMax] = useState<string>('')
+  const [filterTempMin, setFilterTempMin] = useState<string>('')
+  const [filterTempMax, setFilterTempMax] = useState<string>('')
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
   const [lightboxPhoto, setLightboxPhoto] = useState<string | null>(null)
   const [darkMode, setDarkMode] = useState(() => {
     // Initialize from localStorage or default to true
@@ -300,6 +308,44 @@ export default function Dashboard() {
         if (catchDate > toDate) return false
       }
 
+      // Filter by location
+      if (filterLocation) {
+        const searchTerm = filterLocation.toLowerCase()
+        if (!catchItem.location_name.toLowerCase().includes(searchTerm)) {
+          return false
+        }
+      }
+
+      // Filter by weight
+      if (filterWeightMin && catchItem.weight !== null) {
+        const minWeight = parseFloat(filterWeightMin)
+        if (catchItem.weight < minWeight) return false
+      }
+      if (filterWeightMax && catchItem.weight !== null) {
+        const maxWeight = parseFloat(filterWeightMax)
+        if (catchItem.weight > maxWeight) return false
+      }
+
+      // Filter by length
+      if (filterLengthMin && catchItem.length !== null) {
+        const minLength = parseFloat(filterLengthMin)
+        if (catchItem.length < minLength) return false
+      }
+      if (filterLengthMax && catchItem.length !== null) {
+        const maxLength = parseFloat(filterLengthMax)
+        if (catchItem.length > maxLength) return false
+      }
+
+      // Filter by temperature
+      if (filterTempMin && catchItem.weather_data?.temperature !== undefined) {
+        const minTemp = parseFloat(filterTempMin)
+        if (catchItem.weather_data.temperature < minTemp) return false
+      }
+      if (filterTempMax && catchItem.weather_data?.temperature !== undefined) {
+        const maxTemp = parseFloat(filterTempMax)
+        if (catchItem.weather_data.temperature > maxTemp) return false
+      }
+
       return true
     })
   }
@@ -325,9 +371,18 @@ export default function Dashboard() {
     setFilterSpecies('')
     setFilterDateFrom('')
     setFilterDateTo('')
+    setFilterLocation('')
+    setFilterWeightMin('')
+    setFilterWeightMax('')
+    setFilterLengthMin('')
+    setFilterLengthMax('')
+    setFilterTempMin('')
+    setFilterTempMax('')
   }
 
-  const hasActiveFilters = filterSpecies || filterDateFrom || filterDateTo
+  const hasActiveFilters = filterSpecies || filterDateFrom || filterDateTo || filterLocation ||
+    filterWeightMin || filterWeightMax || filterLengthMin || filterLengthMax ||
+    filterTempMin || filterTempMax
 
   const sortCatches = (catches: Catch[]) => {
     const sorted = [...catches].sort((a, b) => {
@@ -761,84 +816,222 @@ export default function Dashboard() {
             {/* Filters */}
             {catches.length > 0 && (
               <div className={`mb-4 p-4 rounded-lg ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'} border`}>
-                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                  <div className="flex items-center gap-2">
-                    <Filter className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`} />
-                    <span className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                      Filter:
-                    </span>
-                  </div>
+                <div className="flex flex-col gap-3">
+                  {/* Main filter row */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                    <div className="flex items-center gap-2">
+                      <Filter className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`} />
+                      <span className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                        Filter:
+                      </span>
+                    </div>
 
-                  <div className="flex flex-wrap gap-3 flex-1">
-                    {/* Species filter */}
-                    {uniqueSpecies.length > 0 && (
-                      <select
-                        value={filterSpecies}
-                        onChange={(e) => setFilterSpecies(e.target.value)}
+                    <div className="flex flex-wrap gap-3 flex-1">
+                      {/* Species filter */}
+                      {uniqueSpecies.length > 0 && (
+                        <select
+                          value={filterSpecies}
+                          onChange={(e) => setFilterSpecies(e.target.value)}
+                          className={`px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                            darkMode
+                              ? 'bg-gray-700 border-gray-600 text-white'
+                              : 'bg-white border-gray-300 text-gray-900'
+                          }`}
+                        >
+                          <option value="">{language === 'en' ? 'All species' : 'Alla arter'}</option>
+                          {uniqueSpecies.map(species => (
+                            <option key={species.id} value={species.id}>
+                              {language === 'en' ? species.name_english : species.name_swedish}
+                            </option>
+                          ))}
+                        </select>
+                      )}
+
+                      {/* Date from */}
+                      <input
+                        type="date"
+                        value={filterDateFrom}
+                        onChange={(e) => setFilterDateFrom(e.target.value)}
+                        placeholder={language === 'en' ? 'From date' : 'Från datum'}
                         className={`px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                           darkMode
                             ? 'bg-gray-700 border-gray-600 text-white'
                             : 'bg-white border-gray-300 text-gray-900'
                         }`}
-                      >
-                        <option value="">Alla arter</option>
-                        {uniqueSpecies.map(species => (
-                          <option key={species.id} value={species.id}>
-                            {language === 'en' ? species.name_english : species.name_swedish}
-                          </option>
-                        ))}
-                      </select>
-                    )}
+                      />
 
-                    {/* Date from */}
-                    <input
-                      type="date"
-                      value={filterDateFrom}
-                      onChange={(e) => setFilterDateFrom(e.target.value)}
-                      placeholder="Från datum"
-                      className={`px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                        darkMode
-                          ? 'bg-gray-700 border-gray-600 text-white'
-                          : 'bg-white border-gray-300 text-gray-900'
-                      }`}
-                    />
+                      {/* Date to */}
+                      <input
+                        type="date"
+                        value={filterDateTo}
+                        onChange={(e) => setFilterDateTo(e.target.value)}
+                        placeholder={language === 'en' ? 'To date' : 'Till datum'}
+                        className={`px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                          darkMode
+                            ? 'bg-gray-700 border-gray-600 text-white'
+                            : 'bg-white border-gray-300 text-gray-900'
+                        }`}
+                      />
 
-                    {/* Date to */}
-                    <input
-                      type="date"
-                      value={filterDateTo}
-                      onChange={(e) => setFilterDateTo(e.target.value)}
-                      placeholder="Till datum"
-                      className={`px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                        darkMode
-                          ? 'bg-gray-700 border-gray-600 text-white'
-                          : 'bg-white border-gray-300 text-gray-900'
-                      }`}
-                    />
+                      {/* Location search */}
+                      <input
+                        type="text"
+                        value={filterLocation}
+                        onChange={(e) => setFilterLocation(e.target.value)}
+                        placeholder={language === 'en' ? 'Search location...' : 'Sök plats...'}
+                        className={`px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                          darkMode
+                            ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
+                            : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                        }`}
+                      />
 
-                    {/* Clear filters button */}
-                    {hasActiveFilters && (
+                      {/* Advanced filters toggle */}
                       <button
-                        onClick={clearFilters}
+                        onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
                         className={`flex items-center gap-1 px-3 py-1.5 text-sm rounded-md transition-colors ${
                           darkMode
                             ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
                             : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
                         }`}
                       >
-                        <X className="w-3 h-3" />
-                        <span>Rensa</span>
+                        {showAdvancedFilters ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                        <span>{language === 'en' ? 'Advanced' : 'Avancerat'}</span>
                       </button>
+
+                      {/* Clear filters button */}
+                      {hasActiveFilters && (
+                        <button
+                          onClick={clearFilters}
+                          className={`flex items-center gap-1 px-3 py-1.5 text-sm rounded-md transition-colors ${
+                            darkMode
+                              ? 'bg-red-900/30 hover:bg-red-900/50 text-red-400'
+                              : 'bg-red-100 hover:bg-red-200 text-red-700'
+                          }`}
+                        >
+                          <X className="w-3 h-3" />
+                          <span>{language === 'en' ? 'Clear' : 'Rensa'}</span>
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Active filter count */}
+                    {(hasActiveFilters || visibleCatches.length > 0) && (
+                      <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                        {getFilteredCatches().length} {language === 'en' ? 'of' : 'av'} {catches.length}
+                        {visibleCatches.length > 0 && visibleCatches.length !== catches.length && (
+                          <span className="ml-1">({language === 'en' ? 'map filtered' : 'kartfiltrerat'})</span>
+                        )}
+                      </div>
                     )}
                   </div>
 
-                  {/* Active filter count */}
-                  {(hasActiveFilters || visibleCatches.length > 0) && (
-                    <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                      {getFilteredCatches().length} av {catches.length}
-                      {visibleCatches.length > 0 && visibleCatches.length !== catches.length && (
-                        <span className="ml-1">({language === 'en' ? 'map filtered' : 'kartfiltrerat'})</span>
-                      )}
+                  {/* Advanced filters */}
+                  {showAdvancedFilters && (
+                    <div className={`pt-3 border-t ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                        {/* Weight filters */}
+                        <div className="space-y-2">
+                          <label className={`text-xs font-medium ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                            <Weight className="w-3 h-3 inline mr-1" />
+                            {language === 'en' ? 'Weight' : 'Vikt'} ({units === 'metric' ? 'kg' : 'lbs'})
+                          </label>
+                          <div className="flex gap-2">
+                            <input
+                              type="number"
+                              step="0.1"
+                              value={filterWeightMin}
+                              onChange={(e) => setFilterWeightMin(e.target.value)}
+                              placeholder={language === 'en' ? 'Min' : 'Min'}
+                              className={`w-full px-2 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                                darkMode
+                                  ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
+                                  : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                              }`}
+                            />
+                            <input
+                              type="number"
+                              step="0.1"
+                              value={filterWeightMax}
+                              onChange={(e) => setFilterWeightMax(e.target.value)}
+                              placeholder={language === 'en' ? 'Max' : 'Max'}
+                              className={`w-full px-2 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                                darkMode
+                                  ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
+                                  : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                              }`}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Length filters */}
+                        <div className="space-y-2">
+                          <label className={`text-xs font-medium ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                            <Ruler className="w-3 h-3 inline mr-1" />
+                            {language === 'en' ? 'Length' : 'Längd'} ({units === 'metric' ? 'cm' : 'in'})
+                          </label>
+                          <div className="flex gap-2">
+                            <input
+                              type="number"
+                              step="1"
+                              value={filterLengthMin}
+                              onChange={(e) => setFilterLengthMin(e.target.value)}
+                              placeholder={language === 'en' ? 'Min' : 'Min'}
+                              className={`w-full px-2 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                                darkMode
+                                  ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
+                                  : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                              }`}
+                            />
+                            <input
+                              type="number"
+                              step="1"
+                              value={filterLengthMax}
+                              onChange={(e) => setFilterLengthMax(e.target.value)}
+                              placeholder={language === 'en' ? 'Max' : 'Max'}
+                              className={`w-full px-2 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                                darkMode
+                                  ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
+                                  : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                              }`}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Temperature filters */}
+                        <div className="space-y-2">
+                          <label className={`text-xs font-medium ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                            <CloudRain className="w-3 h-3 inline mr-1" />
+                            {language === 'en' ? 'Temperature' : 'Temperatur'} ({units === 'metric' ? '°C' : '°F'})
+                          </label>
+                          <div className="flex gap-2">
+                            <input
+                              type="number"
+                              step="1"
+                              value={filterTempMin}
+                              onChange={(e) => setFilterTempMin(e.target.value)}
+                              placeholder={language === 'en' ? 'Min' : 'Min'}
+                              className={`w-full px-2 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                                darkMode
+                                  ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
+                                  : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                              }`}
+                            />
+                            <input
+                              type="number"
+                              step="1"
+                              value={filterTempMax}
+                              onChange={(e) => setFilterTempMax(e.target.value)}
+                              placeholder={language === 'en' ? 'Max' : 'Max'}
+                              className={`w-full px-2 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                                darkMode
+                                  ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
+                                  : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                              }`}
+                            />
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -1182,89 +1375,7 @@ export default function Dashboard() {
           ) : activeTab === 'statistics' ? (
             /* Statistics Tab */
             <>
-              {/* Filters for Statistics */}
-              {catches.length > 0 && (
-                <div className={`mb-4 p-4 rounded-lg ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'} border`}>
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                    <div className="flex items-center gap-2">
-                      <Filter className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`} />
-                      <span className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                        Filter:
-                      </span>
-                    </div>
-
-                    <div className="flex flex-wrap gap-3 flex-1">
-                      {/* Species filter */}
-                      {uniqueSpecies.length > 0 && (
-                        <select
-                          value={filterSpecies}
-                          onChange={(e) => setFilterSpecies(e.target.value)}
-                          className={`px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                            darkMode
-                              ? 'bg-gray-700 border-gray-600 text-white'
-                              : 'bg-white border-gray-300 text-gray-900'
-                          }`}
-                        >
-                          <option value="">{language === 'en' ? 'All species' : 'Alla arter'}</option>
-                          {uniqueSpecies.map(species => (
-                            <option key={species.id} value={species.id}>
-                              {language === 'en' ? species.name_english : species.name_swedish}
-                            </option>
-                          ))}
-                        </select>
-                      )}
-
-                      {/* Date from */}
-                      <input
-                        type="date"
-                        value={filterDateFrom}
-                        onChange={(e) => setFilterDateFrom(e.target.value)}
-                        placeholder={language === 'en' ? 'From date' : 'Från datum'}
-                        className={`px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                          darkMode
-                            ? 'bg-gray-700 border-gray-600 text-white'
-                            : 'bg-white border-gray-300 text-gray-900'
-                        }`}
-                      />
-
-                      {/* Date to */}
-                      <input
-                        type="date"
-                        value={filterDateTo}
-                        onChange={(e) => setFilterDateTo(e.target.value)}
-                        placeholder={language === 'en' ? 'To date' : 'Till datum'}
-                        className={`px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                          darkMode
-                            ? 'bg-gray-700 border-gray-600 text-white'
-                            : 'bg-white border-gray-300 text-gray-900'
-                        }`}
-                      />
-
-                      {/* Clear filters button */}
-                      {hasActiveFilters && (
-                        <button
-                          onClick={clearFilters}
-                          className={`flex items-center gap-1 px-3 py-1.5 text-sm rounded-md transition-colors ${
-                            darkMode
-                              ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
-                              : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-                          }`}
-                        >
-                          <X className="w-3 h-3" />
-                          <span>{language === 'en' ? 'Clear' : 'Rensa'}</span>
-                        </button>
-                      )}
-                    </div>
-
-                    {/* Active filter count */}
-                    {hasActiveFilters && (
-                      <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                        {filterCatches(catches).length} {language === 'en' ? 'of' : 'av'} {catches.length}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
+              {/* Use same filter as catches tab */}
               <StatisticsView catches={filterCatches(catches)} darkMode={darkMode} />
             </>
           ) : activeTab === 'records' ? (
