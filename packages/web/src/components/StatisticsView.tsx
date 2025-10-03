@@ -137,7 +137,7 @@ export default function StatisticsView({ catches, darkMode = false, showOnlyReco
     .sort(([, a], [, b]) => b - a)
     .map(([name, count]) => ({ name, count }))
 
-  const topLocations = allLocations.slice(0, 15)
+  const topLocations = allLocations.slice(0, 5)
 
   // Weather correlation
   const weatherStats = catches

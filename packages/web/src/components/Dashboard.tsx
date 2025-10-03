@@ -57,6 +57,14 @@ export default function Dashboard() {
   const [showAddForm, setShowAddForm] = useState(false)
   const [editingCatch, setEditingCatch] = useState<Catch | null>(null)
   const [activeTab, setActiveTab] = useState<'catches' | 'statistics' | 'records'>('catches')
+
+  // Clear filters when changing tabs
+  const handleTabChange = (tab: 'catches' | 'statistics' | 'records') => {
+    setActiveTab(tab)
+    if (tab !== 'catches' && tab !== 'statistics') {
+      clearFilters()
+    }
+  }
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [showSettings, setShowSettings] = useState(false)
   const [filterSpecies, setFilterSpecies] = useState<string>('')
@@ -573,7 +581,7 @@ export default function Dashboard() {
             <div className={`border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
               <nav className="flex gap-4">
                 <button
-                  onClick={() => setActiveTab('catches')}
+                  onClick={() => handleTabChange('catches')}
                   className={`px-4 py-3 border-b-2 font-medium transition-colors ${
                     activeTab === 'catches'
                       ? `${darkMode ? 'border-blue-400 text-blue-400' : 'border-blue-600 text-blue-600'}`
@@ -586,7 +594,7 @@ export default function Dashboard() {
                   </div>
                 </button>
                 <button
-                  onClick={() => setActiveTab('statistics')}
+                  onClick={() => handleTabChange('statistics')}
                   className={`px-4 py-3 border-b-2 font-medium transition-colors ${
                     activeTab === 'statistics'
                       ? `${darkMode ? 'border-blue-400 text-blue-400' : 'border-blue-600 text-blue-600'}`
@@ -599,7 +607,7 @@ export default function Dashboard() {
                   </div>
                 </button>
                 <button
-                  onClick={() => setActiveTab('records')}
+                  onClick={() => handleTabChange('records')}
                   className={`px-4 py-3 border-b-2 font-medium transition-colors ${
                     activeTab === 'records'
                       ? `${darkMode ? 'border-blue-400 text-blue-400' : 'border-blue-600 text-blue-600'}`
