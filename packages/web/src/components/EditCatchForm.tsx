@@ -251,7 +251,7 @@ export default function EditCatchForm({ catchData, onSuccess, onCancel, darkMode
             </div>
 
             {/* Vikt, Längd och Antal */}
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
                   Vikt (kg)
@@ -399,7 +399,7 @@ export default function EditCatchForm({ catchData, onSuccess, onCancel, darkMode
                 <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
                   Befintliga foton
                 </label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {existingPhotos.map((photo) => {
                     const publicUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/catch-photos/${photo.file_path}`
                     return (

@@ -330,7 +330,7 @@ export default function AddCatchForm({ onSuccess, onCancel, userId, darkMode = f
             </div>
 
             {/* Vikt, Längd och Antal */}
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
                   Vikt (kg)

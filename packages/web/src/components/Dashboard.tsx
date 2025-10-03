@@ -42,7 +42,8 @@ import {
   Trophy,
   Camera,
   Cloud,
-  Flame
+  Flame,
+  Menu
 } from 'lucide-react'
 
 // Convert degrees to compass direction
@@ -68,7 +69,7 @@ export default function Dashboard() {
     setActiveTab(tab)
     clearFilters()
   }
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('list')
   const [showSettings, setShowSettings] = useState(false)
   const [filterSpecies, setFilterSpecies] = useState<string>('')
   const [filterDateFrom, setFilterDateFrom] = useState<string>('')
@@ -81,6 +82,7 @@ export default function Dashboard() {
   const [filterTempMin, setFilterTempMin] = useState<string>('')
   const [filterTempMax, setFilterTempMax] = useState<string>('')
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
+  const [showMobileMenu, setShowMobileMenu] = useState(false)
   const [lightboxPhoto, setLightboxPhoto] = useState<string | null>(null)
   const [darkMode, setDarkMode] = useState(() => {
     // Initialize from localStorage or default to true
@@ -644,14 +646,113 @@ export default function Dashboard() {
 
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
-          {/* Karta */}
           {/* Tab Navigation */}
           <div className="mb-6">
-            <div className={`border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-              <nav className="flex gap-4">
+            {/* Mobile dropdown menu */}
+            <div className="md:hidden relative">
+              <button
+                onClick={() => setShowMobileMenu(!showMobileMenu)}
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-lg border ${
+                  darkMode ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-300 text-gray-900'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Menu className="w-5 h-5" />
+                  <span className="font-medium">
+                    {activeTab === 'catches' && (language === 'en' ? 'My Catches' : 'Mina fångster')}
+                    {activeTab === 'statistics' && (language === 'en' ? 'Statistics' : 'Statistik')}
+                    {activeTab === 'records' && (language === 'en' ? 'Personal Bests' : 'Personliga rekord')}
+                    {activeTab === 'photos' && (language === 'en' ? 'Photo Album' : 'Fotoalbum')}
+                    {activeTab === 'weather' && (language === 'en' ? 'Weather Forecast' : 'Väderprognos')}
+                  </span>
+                </div>
+                <ChevronDown className={`w-5 h-5 transition-transform ${showMobileMenu ? 'rotate-180' : ''}`} />
+              </button>
+
+              {showMobileMenu && (
+                <div className={`absolute z-10 w-full mt-2 rounded-lg border shadow-lg ${
+                  darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+                }`}>
+                  <button
+                    onClick={() => {
+                      handleTabChange('catches')
+                      setShowMobileMenu(false)
+                    }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 text-left ${
+                      activeTab === 'catches'
+                        ? `${darkMode ? 'bg-gray-700 text-blue-400' : 'bg-blue-50 text-blue-600'}`
+                        : `${darkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-50'}`
+                    }`}
+                  >
+                    <List className="w-5 h-5" />
+                    <span>{language === 'en' ? 'My Catches' : 'Mina fångster'}</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      handleTabChange('statistics')
+                      setShowMobileMenu(false)
+                    }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 text-left ${
+                      activeTab === 'statistics'
+                        ? `${darkMode ? 'bg-gray-700 text-blue-400' : 'bg-blue-50 text-blue-600'}`
+                        : `${darkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-50'}`
+                    }`}
+                  >
+                    <BarChart3 className="w-5 h-5" />
+                    <span>{language === 'en' ? 'Statistics' : 'Statistik'}</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      handleTabChange('records')
+                      setShowMobileMenu(false)
+                    }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 text-left ${
+                      activeTab === 'records'
+                        ? `${darkMode ? 'bg-gray-700 text-blue-400' : 'bg-blue-50 text-blue-600'}`
+                        : `${darkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-50'}`
+                    }`}
+                  >
+                    <Trophy className="w-5 h-5" />
+                    <span>{language === 'en' ? 'Personal Bests' : 'Personliga rekord'}</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      handleTabChange('photos')
+                      setShowMobileMenu(false)
+                    }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 text-left ${
+                      activeTab === 'photos'
+                        ? `${darkMode ? 'bg-gray-700 text-blue-400' : 'bg-blue-50 text-blue-600'}`
+                        : `${darkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-50'}`
+                    }`}
+                  >
+                    <Camera className="w-5 h-5" />
+                    <span>{language === 'en' ? 'Photo Album' : 'Fotoalbum'}</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      handleTabChange('weather')
+                      setShowMobileMenu(false)
+                    }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 text-left rounded-b-lg ${
+                      activeTab === 'weather'
+                        ? `${darkMode ? 'bg-gray-700 text-blue-400' : 'bg-blue-50 text-blue-600'}`
+                        : `${darkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-50'}`
+                    }`}
+                  >
+                    <Cloud className="w-5 h-5" />
+                    <span>{language === 'en' ? 'Weather Forecast' : 'Väderprognos'}</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Desktop tabs */}
+            <div className={`hidden md:block border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+              <nav className="flex gap-4 overflow-x-auto">
                 <button
                   onClick={() => handleTabChange('catches')}
-                  className={`px-4 py-3 border-b-2 font-medium transition-colors ${
+                  className={`px-4 py-3 border-b-2 font-medium transition-colors whitespace-nowrap ${
                     activeTab === 'catches'
                       ? `${darkMode ? 'border-blue-400 text-blue-400' : 'border-blue-600 text-blue-600'}`
                       : `border-transparent ${darkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-600 hover:text-gray-900'}`
@@ -664,7 +765,7 @@ export default function Dashboard() {
                 </button>
                 <button
                   onClick={() => handleTabChange('statistics')}
-                  className={`px-4 py-3 border-b-2 font-medium transition-colors ${
+                  className={`px-4 py-3 border-b-2 font-medium transition-colors whitespace-nowrap ${
                     activeTab === 'statistics'
                       ? `${darkMode ? 'border-blue-400 text-blue-400' : 'border-blue-600 text-blue-600'}`
                       : `border-transparent ${darkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-600 hover:text-gray-900'}`
@@ -677,7 +778,7 @@ export default function Dashboard() {
                 </button>
                 <button
                   onClick={() => handleTabChange('records')}
-                  className={`px-4 py-3 border-b-2 font-medium transition-colors ${
+                  className={`px-4 py-3 border-b-2 font-medium transition-colors whitespace-nowrap ${
                     activeTab === 'records'
                       ? `${darkMode ? 'border-blue-400 text-blue-400' : 'border-blue-600 text-blue-600'}`
                       : `border-transparent ${darkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-600 hover:text-gray-900'}`
@@ -690,7 +791,7 @@ export default function Dashboard() {
                 </button>
                 <button
                   onClick={() => handleTabChange('photos')}
-                  className={`px-4 py-3 border-b-2 font-medium transition-colors ${
+                  className={`px-4 py-3 border-b-2 font-medium transition-colors whitespace-nowrap ${
                     activeTab === 'photos'
                       ? `${darkMode ? 'border-blue-400 text-blue-400' : 'border-blue-600 text-blue-600'}`
                       : `border-transparent ${darkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-600 hover:text-gray-900'}`
@@ -703,7 +804,7 @@ export default function Dashboard() {
                 </button>
                 <button
                   onClick={() => handleTabChange('weather')}
-                  className={`px-4 py-3 border-b-2 font-medium transition-colors ${
+                  className={`px-4 py-3 border-b-2 font-medium transition-colors whitespace-nowrap ${
                     activeTab === 'weather'
                       ? `${darkMode ? 'border-blue-400 text-blue-400' : 'border-blue-600 text-blue-600'}`
                       : `border-transparent ${darkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-600 hover:text-gray-900'}`
@@ -808,31 +909,47 @@ export default function Dashboard() {
                   className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
                 >
                   <Plus className="w-4 h-4" />
-                  {t('dashboard.addCatch')}
+                  <span className="hidden sm:inline">{t('dashboard.addCatch')}</span>
+                  <span className="sm:hidden">{language === 'en' ? 'Add' : 'Lägg till'}</span>
                 </button>
               </div>
             </div>
 
             {/* Filters */}
             {catches.length > 0 && (
-              <div className={`mb-4 p-4 rounded-lg ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'} border`}>
+              <div className={`mb-4 p-3 md:p-4 rounded-lg ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'} border`}>
                 <div className="flex flex-col gap-3">
-                  {/* Main filter row */}
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                  {/* Header row */}
+                  <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Filter className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`} />
                       <span className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                        Filter:
+                        {language === 'en' ? 'Filters' : 'Filter'}
                       </span>
                     </div>
+                    {/* Active filter count */}
+                    {(hasActiveFilters || visibleCatches.length > 0) && (
+                      <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                        {getFilteredCatches().length} {language === 'en' ? 'of' : 'av'} {catches.length}
+                        {visibleCatches.length > 0 && visibleCatches.length !== catches.length && (
+                          <span className="ml-1 hidden sm:inline">({language === 'en' ? 'map filtered' : 'kartfiltrerat'})</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
 
-                    <div className="flex flex-wrap gap-3 flex-1">
-                      {/* Species filter */}
-                      {uniqueSpecies.length > 0 && (
+                  {/* Main filters */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    {/* Species filter */}
+                    {uniqueSpecies.length > 0 && (
+                      <div className="flex flex-col gap-1">
+                        <label className={`text-xs font-medium ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                          {language === 'en' ? 'Species' : 'Art'}
+                        </label>
                         <select
                           value={filterSpecies}
                           onChange={(e) => setFilterSpecies(e.target.value)}
-                          className={`px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                          className={`px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                             darkMode
                               ? 'bg-gray-700 border-gray-600 text-white'
                               : 'bg-white border-gray-300 text-gray-900'
@@ -845,84 +962,90 @@ export default function Dashboard() {
                             </option>
                           ))}
                         </select>
-                      )}
+                      </div>
+                    )}
 
-                      {/* Date from */}
+                    {/* Date from */}
+                    <div className="flex flex-col gap-1">
+                      <label className={`text-xs font-medium ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                        {language === 'en' ? 'From date' : 'Från datum'}
+                      </label>
                       <input
                         type="date"
                         value={filterDateFrom}
                         onChange={(e) => setFilterDateFrom(e.target.value)}
-                        placeholder={language === 'en' ? 'From date' : 'Från datum'}
-                        className={`px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                        className={`px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                           darkMode
                             ? 'bg-gray-700 border-gray-600 text-white'
                             : 'bg-white border-gray-300 text-gray-900'
                         }`}
                       />
+                    </div>
 
-                      {/* Date to */}
+                    {/* Date to */}
+                    <div className="flex flex-col gap-1">
+                      <label className={`text-xs font-medium ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                        {language === 'en' ? 'To date' : 'Till datum'}
+                      </label>
                       <input
                         type="date"
                         value={filterDateTo}
                         onChange={(e) => setFilterDateTo(e.target.value)}
-                        placeholder={language === 'en' ? 'To date' : 'Till datum'}
-                        className={`px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                        className={`px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                           darkMode
                             ? 'bg-gray-700 border-gray-600 text-white'
                             : 'bg-white border-gray-300 text-gray-900'
                         }`}
                       />
+                    </div>
 
-                      {/* Location search */}
+                    {/* Location search */}
+                    <div className="flex flex-col gap-1">
+                      <label className={`text-xs font-medium ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                        {language === 'en' ? 'Location' : 'Plats'}
+                      </label>
                       <input
                         type="text"
                         value={filterLocation}
                         onChange={(e) => setFilterLocation(e.target.value)}
-                        placeholder={language === 'en' ? 'Search location...' : 'Sök plats...'}
-                        className={`px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                        placeholder={language === 'en' ? 'Search...' : 'Sök...'}
+                        className={`px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                           darkMode
                             ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
                             : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
                         }`}
                       />
+                    </div>
+                  </div>
 
-                      {/* Advanced filters toggle */}
+                  {/* Action buttons */}
+                  <div className="flex flex-wrap gap-2">
+                    {/* Advanced filters toggle */}
+                    <button
+                      onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                      className={`flex items-center gap-1 px-3 py-1.5 text-sm rounded-md transition-colors ${
+                        darkMode
+                          ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                          : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                      }`}
+                    >
+                      {showAdvancedFilters ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                      <span>{language === 'en' ? 'Advanced' : 'Avancerat'}</span>
+                    </button>
+
+                    {/* Clear filters button */}
+                    {hasActiveFilters && (
                       <button
-                        onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                        onClick={clearFilters}
                         className={`flex items-center gap-1 px-3 py-1.5 text-sm rounded-md transition-colors ${
                           darkMode
-                            ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
-                            : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                            ? 'bg-red-900/30 hover:bg-red-900/50 text-red-400'
+                            : 'bg-red-100 hover:bg-red-200 text-red-700'
                         }`}
                       >
-                        {showAdvancedFilters ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
-                        <span>{language === 'en' ? 'Advanced' : 'Avancerat'}</span>
+                        <X className="w-3 h-3" />
+                        <span>{language === 'en' ? 'Clear all' : 'Rensa alla'}</span>
                       </button>
-
-                      {/* Clear filters button */}
-                      {hasActiveFilters && (
-                        <button
-                          onClick={clearFilters}
-                          className={`flex items-center gap-1 px-3 py-1.5 text-sm rounded-md transition-colors ${
-                            darkMode
-                              ? 'bg-red-900/30 hover:bg-red-900/50 text-red-400'
-                              : 'bg-red-100 hover:bg-red-200 text-red-700'
-                          }`}
-                        >
-                          <X className="w-3 h-3" />
-                          <span>{language === 'en' ? 'Clear' : 'Rensa'}</span>
-                        </button>
-                      )}
-                    </div>
-
-                    {/* Active filter count */}
-                    {(hasActiveFilters || visibleCatches.length > 0) && (
-                      <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                        {getFilteredCatches().length} {language === 'en' ? 'of' : 'av'} {catches.length}
-                        {visibleCatches.length > 0 && visibleCatches.length !== catches.length && (
-                          <span className="ml-1">({language === 'en' ? 'map filtered' : 'kartfiltrerat'})</span>
-                        )}
-                      </div>
                     )}
                   </div>
 

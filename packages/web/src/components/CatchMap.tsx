@@ -315,7 +315,7 @@ export default function CatchMap({ catches, apiKey, onBoundsChange, darkMode = f
 
   if (!apiKey) {
     return (
-      <div className="h-96 bg-gray-100 rounded-lg flex items-center justify-center">
+      <div className="h-64 md:h-80 bg-gray-100 rounded-lg flex items-center justify-center">
         <div className="text-center">
           <p className="text-gray-600">Google Maps API-nyckel krävs</p>
           <p className="text-sm text-gray-500">Konfigurera NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</p>
@@ -325,7 +325,7 @@ export default function CatchMap({ catches, apiKey, onBoundsChange, darkMode = f
   }
 
   return (
-    <div className="h-96 rounded-lg overflow-hidden shadow-lg">
+    <div className="h-64 md:h-80 rounded-lg overflow-hidden shadow-lg">
       <APIProvider apiKey={apiKey} libraries={['visualization']}>
         <Map
           defaultCenter={center}
