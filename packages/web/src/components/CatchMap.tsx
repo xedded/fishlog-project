@@ -2,7 +2,7 @@
 
 import { APIProvider, Map, AdvancedMarker, InfoWindow, useMap } from '@vis.gl/react-google-maps'
 import { useState, useEffect } from 'react'
-import { Fish } from 'lucide-react'
+import { Fish, Flame } from 'lucide-react'
 import { Catch } from '@/types/catch'
 
 interface CatchMapProps {
@@ -10,11 +10,13 @@ interface CatchMapProps {
   apiKey: string
   onBoundsChange?: (visibleCatches: Catch[]) => void
   darkMode?: boolean
+  showHeatmap?: boolean
 }
 
-function MapContent({ catches, onBoundsChange, darkMode }: { catches: Catch[], onBoundsChange?: (visibleCatches: Catch[]) => void, darkMode: boolean }) {
+function MapContent({ catches, onBoundsChange, darkMode, showHeatmap }: { catches: Catch[], onBoundsChange?: (visibleCatches: Catch[]) => void, darkMode: boolean, showHeatmap: boolean }) {
   const map = useMap()
   const [selectedCatch, setSelectedCatch] = useState<Catch | null>(null)
+  const [heatmapLayer, setHeatmapLayer] = useState<google.maps.visualization.HeatmapLayer | null>(null)
 
   // Funktion för att kolla vilka fångster som är synliga
   const updateVisibleCatches = () => {
@@ -61,6 +63,59 @@ function MapContent({ catches, onBoundsChange, darkMode }: { catches: Catch[], o
     }
   }, [map, catches]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Heatmap effect
+  useEffect(() => {
+    if (!map || !showHeatmap) {
+      // Remove heatmap if it exists
+      if (heatmapLayer) {
+        heatmapLayer.setMap(null)
+        setHeatmapLayer(null)
+      }
+      return
+    }
+
+    // Create heatmap data
+    const heatmapData = catches.map(c => ({
+      location: new google.maps.LatLng(c.latitude, c.longitude),
+      weight: c.quantity || 1
+    }))
+
+    // Create or update heatmap layer
+    if (heatmapLayer) {
+      heatmapLayer.setData(heatmapData)
+    } else {
+      const newHeatmap = new google.maps.visualization.HeatmapLayer({
+        data: heatmapData,
+        radius: 30,
+        opacity: 0.6,
+        gradient: [
+          'rgba(0, 255, 255, 0)',
+          'rgba(0, 255, 255, 1)',
+          'rgba(0, 191, 255, 1)',
+          'rgba(0, 127, 255, 1)',
+          'rgba(0, 63, 255, 1)',
+          'rgba(0, 0, 255, 1)',
+          'rgba(0, 0, 223, 1)',
+          'rgba(0, 0, 191, 1)',
+          'rgba(0, 0, 159, 1)',
+          'rgba(0, 0, 127, 1)',
+          'rgba(63, 0, 91, 1)',
+          'rgba(127, 0, 63, 1)',
+          'rgba(191, 0, 31, 1)',
+          'rgba(255, 0, 0, 1)'
+        ]
+      })
+      newHeatmap.setMap(map)
+      setHeatmapLayer(newHeatmap)
+    }
+
+    return () => {
+      if (heatmapLayer) {
+        heatmapLayer.setMap(null)
+      }
+    }
+  }, [map, showHeatmap, catches]) // eslint-disable-line react-hooks/exhaustive-deps
+
   // Get color based on species category
   const getCategoryColor = (category: string) => {
     const colors: { [key: string]: string } = {
@@ -75,7 +130,7 @@ function MapContent({ catches, onBoundsChange, darkMode }: { catches: Catch[], o
 
   return (
     <>
-      {catches.map((catch_item) => (
+      {!showHeatmap && catches.map((catch_item) => (
         <AdvancedMarker
           key={catch_item.id}
           position={{ lat: catch_item.latitude, lng: catch_item.longitude }}
@@ -248,7 +303,7 @@ const degreesToCompass = (degrees: number): string => {
   return directions[index % 16]
 }
 
-export default function CatchMap({ catches, apiKey, onBoundsChange, darkMode = false }: CatchMapProps) {
+export default function CatchMap({ catches, apiKey, onBoundsChange, darkMode = false, showHeatmap = false }: CatchMapProps) {
   // Beräkna center baserat på fångster
   const center = catches.length > 0 ? {
     lat: catches.reduce((sum, c) => sum + c.latitude, 0) / catches.length,
@@ -269,7 +324,7 @@ export default function CatchMap({ catches, apiKey, onBoundsChange, darkMode = f
 
   return (
     <div className="h-96 rounded-lg overflow-hidden shadow-lg">
-      <APIProvider apiKey={apiKey}>
+      <APIProvider apiKey={apiKey} libraries={['visualization']}>
         <Map
           defaultCenter={center}
           defaultZoom={6}
@@ -278,7 +333,7 @@ export default function CatchMap({ catches, apiKey, onBoundsChange, darkMode = f
           mapId="fishlog-map"
           styles={darkMode ? darkMapStyles : undefined}
         >
-          <MapContent catches={catches} onBoundsChange={onBoundsChange} darkMode={darkMode} />
+          <MapContent catches={catches} onBoundsChange={onBoundsChange} darkMode={darkMode} showHeatmap={showHeatmap} />
         </Map>
       </APIProvider>
     </div>

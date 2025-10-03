@@ -41,7 +41,8 @@ import {
   X,
   Trophy,
   Camera,
-  Cloud
+  Cloud,
+  Flame
 } from 'lucide-react'
 
 // Convert degrees to compass direction
@@ -98,6 +99,7 @@ export default function Dashboard() {
     profile_name: string
     avatar_url?: string
   } | null>(null)
+  const [showHeatmap, setShowHeatmap] = useState(false)
 
   // Save darkMode to localStorage whenever it changes
   useEffect(() => {
@@ -656,17 +658,33 @@ export default function Dashboard() {
               {/* Map Section */}
               {catches.length > 0 && (
                 <div className="mb-8">
-                  <div className="flex items-center gap-2 mb-4">
-                    <MapPin className={`w-6 h-6 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`} />
-                    <h2 className={`text-xl font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                      {t('catch.location')}
-                    </h2>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <MapPin className={`w-6 h-6 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`} />
+                      <h2 className={`text-xl font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                        {t('catch.location')}
+                      </h2>
+                    </div>
+                    <button
+                      onClick={() => setShowHeatmap(!showHeatmap)}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
+                        showHeatmap
+                          ? `${darkMode ? 'bg-orange-600 hover:bg-orange-700' : 'bg-orange-500 hover:bg-orange-600'} text-white`
+                          : `${darkMode ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' : 'bg-gray-200 hover:bg-gray-300 text-gray-700'}`
+                      }`}
+                    >
+                      <Flame className="w-4 h-4" />
+                      <span className="text-sm">
+                        {language === 'en' ? 'Heatmap' : 'Värmekarta'}
+                      </span>
+                    </button>
                   </div>
                   <CatchMap
                     catches={filterCatches(catches)}
                     apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ''}
                     onBoundsChange={setVisibleCatches}
                     darkMode={darkMode}
+                    showHeatmap={showHeatmap}
                   />
                 </div>
               )}
