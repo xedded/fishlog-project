@@ -25,6 +25,7 @@ export interface Catch {
     weather_desc: string
     wind_speed: number
     wind_direction: number
+    wind_gusts: number | null
     pressure: number
     humidity: number
   }

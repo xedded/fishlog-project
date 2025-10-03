@@ -26,6 +26,7 @@ export interface DatabaseWeatherData {
   pressure: number | null
   wind_speed: number | null
   wind_direction: number | null
+  wind_gusts: number | null
   humidity: number | null
   weather_desc: string | null
   recorded_at: string | null

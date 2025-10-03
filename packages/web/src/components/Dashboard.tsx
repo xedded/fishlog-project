@@ -142,12 +142,22 @@ export default function Dashboard() {
     return `${celsius}°C`
   }
 
-  const convertWindSpeed = (ms: number): string => {
+  const convertWindSpeed = (ms: number, gusts?: number | null): string => {
+    let result = ''
     if (units === 'imperial') {
       const mph = ms * 2.23694
-      return `${mph.toFixed(1)} mph`
+      result = `${mph.toFixed(1)} mph`
+      if (gusts) {
+        const gustsMph = gusts * 2.23694
+        result += ` (${gustsMph.toFixed(1)} mph ${language === 'en' ? 'gusts' : 'i byar'})`
+      }
+    } else {
+      result = `${ms} m/s`
+      if (gusts) {
+        result += ` (${gusts} m/s ${language === 'en' ? 'gusts' : 'i byar'})`
+      }
     }
-    return `${ms} m/s`
+    return result
   }
 
   const formatDate = (dateStr: string): string => {
@@ -920,7 +930,7 @@ export default function Dashboard() {
                             <Wind className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
                             <span className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>{t('catch.windSpeed')}:</span>
                             <span className={`ml-auto ${darkMode ? 'text-gray-100' : 'text-gray-900'} font-medium`}>
-                              {convertWindSpeed(catch_item.weather_data.wind_speed)} {degreesToCompass(catch_item.weather_data.wind_direction, language)}
+                              {convertWindSpeed(catch_item.weather_data.wind_speed, catch_item.weather_data.wind_gusts)} {degreesToCompass(catch_item.weather_data.wind_direction, language)}
                             </span>
                           </div>
                           <div className="flex items-center gap-2">
@@ -1091,7 +1101,7 @@ export default function Dashboard() {
                                         <div className="flex items-center gap-2">
                                           <Wind className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
                                           <span className={darkMode ? 'text-gray-300' : 'text-gray-600'}>{t('catch.windSpeed')}:</span>
-                                          <span className={`font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>{convertWindSpeed(catch_item.weather_data.wind_speed)} {degreesToCompass(catch_item.weather_data.wind_direction, language)}</span>
+                                          <span className={`font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>{convertWindSpeed(catch_item.weather_data.wind_speed, catch_item.weather_data.wind_gusts)} {degreesToCompass(catch_item.weather_data.wind_direction, language)}</span>
                                         </div>
                                         <div className="flex items-center gap-2">
                                           <Gauge className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />

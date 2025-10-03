@@ -229,6 +229,7 @@ export default function AddCatchForm({ onSuccess, onCancel, userId, darkMode = f
             humidity: weatherData.humidity,
             wind_speed: weatherData.wind_speed,
             wind_direction: weatherData.wind_direction,
+            wind_gusts: weatherData.wind_gusts,
             recorded_at: formData.caught_at
           })
           .select()

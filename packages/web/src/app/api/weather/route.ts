@@ -29,14 +29,14 @@ export async function GET(request: NextRequest) {
 
     if (isFuture) {
       // Use forecast API (up to 16 days in future)
-      url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,weathercode,pressure_msl,relativehumidity_2m,windspeed_10m,winddirection_10m&timezone=auto&start_date=${dateStr}&end_date=${dateStr}`
+      url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,weathercode,pressure_msl,relativehumidity_2m,windspeed_10m,winddirection_10m,windgusts_10m&timezone=auto&start_date=${dateStr}&end_date=${dateStr}`
     } else {
       // For past dates, try historical API first (last 2 years)
       const twoYearsAgo = new Date(now.getTime() - 2 * 365 * 24 * 60 * 60 * 1000)
 
       if (catchDate >= twoYearsAgo) {
         // Use historical API (free, last 2 years)
-        url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${dateStr}&end_date=${dateStr}&hourly=temperature_2m,weathercode,pressure_msl,relativehumidity_2m,windspeed_10m,winddirection_10m&timezone=auto`
+        url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${dateStr}&end_date=${dateStr}&hourly=temperature_2m,weathercode,pressure_msl,relativehumidity_2m,windspeed_10m,winddirection_10m,windgusts_10m&timezone=auto`
       } else {
         // Too old for free historical data
         return NextResponse.json({
@@ -45,7 +45,8 @@ export async function GET(request: NextRequest) {
           pressure: null,
           humidity: null,
           wind_speed: null,
-          wind_direction: null
+          wind_direction: null,
+          wind_gusts: null
         })
       }
     }
@@ -118,7 +119,8 @@ export async function GET(request: NextRequest) {
       pressure: Math.round(hourly.pressure_msl[closestIndex]),
       humidity: Math.round(hourly.relativehumidity_2m[closestIndex]),
       wind_speed: Math.round(hourly.windspeed_10m[closestIndex] * 10) / 10,
-      wind_direction: Math.round(hourly.winddirection_10m[closestIndex])
+      wind_direction: Math.round(hourly.winddirection_10m[closestIndex]),
+      wind_gusts: hourly.windgusts_10m?.[closestIndex] ? Math.round(hourly.windgusts_10m[closestIndex] * 10) / 10 : null
     })
   } catch (error) {
     console.error('Weather API error:', error)

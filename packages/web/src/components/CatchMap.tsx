@@ -195,7 +195,9 @@ function MapContent({ catches, onBoundsChange, darkMode, showHeatmap }: { catche
                   <div className="flex justify-between gap-3">
                     <span className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Vind:</span>
                     <span className={`font-semibold ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>
-                      {selectedCatch.weather_data.wind_speed} m/s {degreesToCompass(selectedCatch.weather_data.wind_direction)}
+                      {selectedCatch.weather_data.wind_speed} m/s
+                      {selectedCatch.weather_data.wind_gusts && ` (${selectedCatch.weather_data.wind_gusts} m/s i byar)`}
+                      {' '}{degreesToCompass(selectedCatch.weather_data.wind_direction)}
                     </span>
                   </div>
                 </>

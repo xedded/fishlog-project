@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { Cloud, Wind, Droplets, Eye, Sunrise, Sunset, ThermometerSun, Fish } from 'lucide-react'
+import { Cloud, Wind, Droplets, Eye, Sunrise, Sunset, ThermometerSun, Fish, MapPin } from 'lucide-react'
+import { APIProvider, Map, AdvancedMarker } from '@vis.gl/react-google-maps'
 
 interface WeatherForecastViewProps {
   darkMode?: boolean
@@ -16,27 +17,30 @@ interface ForecastDay {
   minTemp: number
   precipitation: number
   windSpeed: number
+  windGusts: number
   windDirection: number
   weatherCode: number
   sunrise: string
   sunset: string
 }
 
-export default function WeatherForecastView({ darkMode = false, latitude = 59.329, longitude = 18.068 }: WeatherForecastViewProps) {
+export default function WeatherForecastView({ darkMode = false, latitude: initialLat = 59.329, longitude: initialLng = 18.068 }: WeatherForecastViewProps) {
   const { language } = useLanguage()
   const [forecast, setForecast] = useState<ForecastDay[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [locationName, setLocationName] = useState<string>('')
+  const [showLocationPicker, setShowLocationPicker] = useState(false)
+  const [selectedLocation, setSelectedLocation] = useState({ lat: initialLat, lng: initialLng })
 
   useEffect(() => {
     fetchForecast()
     fetchLocationName()
-  }, [latitude, longitude])
+  }, [selectedLocation])
 
   const fetchLocationName = async () => {
     try {
-      const response = await fetch(`/api/geocode?lat=${latitude}&lon=${longitude}`)
+      const response = await fetch(`/api/geocode?lat=${selectedLocation.lat}&lon=${selectedLocation.lng}`)
       const data = await response.json()
       if (data.name) {
         setLocationName(data.name)
@@ -52,7 +56,7 @@ export default function WeatherForecastView({ darkMode = false, latitude = 59.32
 
     try {
       // Use Open-Meteo API for 7-day forecast
-      const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,windspeed_10m_max,winddirection_10m_dominant,weathercode,sunrise,sunset&timezone=auto&forecast_days=7`
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${selectedLocation.lat}&longitude=${selectedLocation.lng}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_mean,wind_gusts_10m_max,winddirection_10m_dominant,weathercode,sunrise,sunset&timezone=auto&forecast_days=7`
 
       const response = await fetch(url)
       const data = await response.json()
@@ -63,7 +67,8 @@ export default function WeatherForecastView({ darkMode = false, latitude = 59.32
           maxTemp: data.daily.temperature_2m_max[index],
           minTemp: data.daily.temperature_2m_min[index],
           precipitation: data.daily.precipitation_sum[index],
-          windSpeed: data.daily.windspeed_10m_max[index],
+          windSpeed: data.daily.wind_speed_10m_mean[index],
+          windGusts: data.daily.wind_gusts_10m_max[index],
           windDirection: data.daily.winddirection_10m_dominant[index],
           weatherCode: data.daily.weathercode[index],
           sunrise: data.daily.sunrise[index],
@@ -77,6 +82,15 @@ export default function WeatherForecastView({ darkMode = false, latitude = 59.32
       console.error('Forecast error:', err)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleMapClick = (event: google.maps.MapMouseEvent) => {
+    if (event.latLng) {
+      setSelectedLocation({
+        lat: event.latLng.lat(),
+        lng: event.latLng.lng()
+      })
     }
   }
 
@@ -198,9 +212,58 @@ export default function WeatherForecastView({ darkMode = false, latitude = 59.32
               </p>
             )}
           </div>
-          <Cloud className={`w-12 h-12 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`} />
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowLocationPicker(!showLocationPicker)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                showLocationPicker
+                  ? `${darkMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'} text-white`
+                  : `${darkMode ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' : 'bg-gray-200 hover:bg-gray-300 text-gray-700'}`
+              }`}
+            >
+              <MapPin className="w-4 h-4" />
+              <span className="text-sm">
+                {language === 'en' ? 'Change Location' : 'Byt plats'}
+              </span>
+            </button>
+            <Cloud className={`w-12 h-12 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`} />
+          </div>
         </div>
       </div>
+
+      {/* Location Picker Map */}
+      {showLocationPicker && (
+        <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-md p-4`}>
+          <div className="mb-3">
+            <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              {language === 'en'
+                ? 'Click on the map to select a location for weather forecast'
+                : 'Klicka på kartan för att välja plats för väderprognos'}
+            </p>
+          </div>
+          <div className="h-96 rounded-lg overflow-hidden">
+            <APIProvider apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ''}>
+              <Map
+                defaultCenter={selectedLocation}
+                defaultZoom={6}
+                gestureHandling="greedy"
+                disableDefaultUI={false}
+                mapId="weather-location-picker"
+                onClick={handleMapClick}
+              >
+                <AdvancedMarker
+                  position={selectedLocation}
+                  title={language === 'en' ? 'Selected location' : 'Vald plats'}
+                >
+                  <div className="bg-blue-500 rounded-full p-2 shadow-lg">
+                    <MapPin className="w-6 h-6 text-white" />
+                  </div>
+                </AdvancedMarker>
+              </Map>
+            </APIProvider>
+          </div>
+        </div>
+      )}
 
       {/* Forecast Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -248,7 +311,7 @@ export default function WeatherForecastView({ darkMode = false, latitude = 59.32
                 <div className="flex items-center gap-2 text-sm">
                   <Wind className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`} />
                   <span className={`${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                    {Math.round(day.windSpeed)} m/s
+                    {Math.round(day.windSpeed)} m/s ({Math.round(day.windGusts)} m/s {language === 'en' ? 'gusts' : 'i byar'})
                   </span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
