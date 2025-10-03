@@ -8,6 +8,7 @@ import { useLanguage } from '@/contexts/LanguageContext'
 import CatchMap from './CatchMap'
 import AddCatchForm from './AddCatchForm'
 import EditCatchForm from './EditCatchForm'
+import StatisticsView from './StatisticsView'
 import {
   Sun,
   Moon,
@@ -15,6 +16,7 @@ import {
   Plus,
   Grid3x3,
   List,
+  BarChart3,
   ArrowUpDown,
   MapPin,
   Calendar,
@@ -53,7 +55,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [showAddForm, setShowAddForm] = useState(false)
   const [editingCatch, setEditingCatch] = useState<Catch | null>(null)
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+  const [viewMode, setViewMode] = useState<'grid' | 'list' | 'statistics'>('grid')
   const [showSettings, setShowSettings] = useState(false)
   const [filterSpecies, setFilterSpecies] = useState<string>('')
   const [filterDateFrom, setFilterDateFrom] = useState<string>('')
@@ -276,6 +278,23 @@ export default function Dashboard() {
 
       return true
     })
+  }
+
+  // Get combined filtered catches (both map bounds AND manual filters)
+  const getFilteredCatches = () => {
+    // Start with all catches
+    let filtered = catches
+
+    // Apply manual filters (species, date)
+    filtered = filterCatches(filtered)
+
+    // If map has bounds filter active, intersect with visible catches
+    if (visibleCatches.length > 0) {
+      const visibleIds = new Set(visibleCatches.map(c => c.id))
+      filtered = filtered.filter(c => visibleIds.has(c.id))
+    }
+
+    return filtered
   }
 
   const clearFilters = () => {
@@ -601,6 +620,17 @@ export default function Dashboard() {
                     >
                       <List className="w-4 h-4" />
                     </button>
+                    <button
+                      onClick={() => setViewMode('statistics')}
+                      className={`p-2 rounded-md transition-colors ${
+                        viewMode === 'statistics'
+                          ? `${darkMode ? 'bg-gray-600 text-white' : 'bg-white text-gray-900'} shadow`
+                          : `${darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`
+                      }`}
+                      title={language === 'en' ? 'Statistics view' : 'Statistikvy'}
+                    >
+                      <BarChart3 className="w-4 h-4" />
+                    </button>
                   </div>
                 )}
                 <button
@@ -698,23 +728,28 @@ export default function Dashboard() {
                   </div>
 
                   {/* Active filter count */}
-                  {hasActiveFilters && (
+                  {(hasActiveFilters || visibleCatches.length > 0) && (
                     <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                      {filterCatches(catches).length} av {catches.length}
+                      {getFilteredCatches().length} av {catches.length}
+                      {visibleCatches.length > 0 && visibleCatches.length !== catches.length && (
+                        <span className="ml-1">({language === 'en' ? 'map filtered' : 'kartfiltrerat'})</span>
+                      )}
                     </div>
                   )}
                 </div>
               </div>
             )}
 
-            {catches.length === 0 ? (
+            {viewMode === 'statistics' ? (
+              <StatisticsView catches={catches} darkMode={darkMode} />
+            ) : catches.length === 0 ? (
               <div className="text-center py-12">
                 <p className={`${darkMode ? 'text-gray-400' : 'text-gray-500'} text-lg`}>{t('dashboard.noCatches')}</p>
                 <p className={`${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>{t('dashboard.noCatchesDesc')}</p>
               </div>
             ) : viewMode === 'grid' ? (
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {sortCatches(filterCatches(visibleCatches.length > 0 ? visibleCatches : catches)).map((catch_item) => (
+                {sortCatches(getFilteredCatches()).map((catch_item) => (
                   <div key={catch_item.id} className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-xl border shadow-sm hover:shadow-md transition-shadow p-5 relative`}>
                     <div className="absolute top-3 right-3 flex gap-1">
                       <button
@@ -883,7 +918,7 @@ export default function Dashboard() {
                     </tr>
                   </thead>
                   <tbody className={`${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
-                    {sortCatches(filterCatches(visibleCatches.length > 0 ? visibleCatches : catches)).map((catch_item) => {
+                    {sortCatches(getFilteredCatches()).map((catch_item) => {
                       const isExpanded = expandedRows.has(catch_item.id)
                       return (
                         <React.Fragment key={catch_item.id}>
