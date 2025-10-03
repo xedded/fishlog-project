@@ -61,9 +61,7 @@ export default function Dashboard() {
   // Clear filters when changing tabs
   const handleTabChange = (tab: 'catches' | 'statistics' | 'records') => {
     setActiveTab(tab)
-    if (tab !== 'catches' && tab !== 'statistics') {
-      clearFilters()
-    }
+    clearFilters()
   }
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [showSettings, setShowSettings] = useState(false)
