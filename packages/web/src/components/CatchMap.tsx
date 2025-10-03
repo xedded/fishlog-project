@@ -80,49 +80,44 @@ function MapContent({ catches, onBoundsChange, darkMode, showHeatmap }: { catche
       return
     }
 
+    // Don't recreate if heatmap already exists
+    if (heatmapLayer) {
+      return
+    }
+
     // Create heatmap data - array of WeightedLocation objects
     const heatmapData: google.maps.visualization.WeightedLocation[] = catches.map(c => ({
       location: new google.maps.LatLng(c.latitude, c.longitude),
       weight: c.quantity || 1
     }))
 
-    console.log('Heatmap data:', heatmapData)
+    console.log('Creating heatmap with data:', heatmapData.length, 'points')
 
-    // Create or update heatmap layer
-    if (heatmapLayer) {
-      heatmapLayer.setData(heatmapData)
-    } else {
-      const newHeatmap = new google.maps.visualization.HeatmapLayer({
-        data: heatmapData,
-        map: map,
-        radius: 30,
-        opacity: 0.6,
-        gradient: [
-          'rgba(0, 255, 255, 0)',
-          'rgba(0, 255, 255, 1)',
-          'rgba(0, 191, 255, 1)',
-          'rgba(0, 127, 255, 1)',
-          'rgba(0, 63, 255, 1)',
-          'rgba(0, 0, 255, 1)',
-          'rgba(0, 0, 223, 1)',
-          'rgba(0, 0, 191, 1)',
-          'rgba(0, 0, 159, 1)',
-          'rgba(0, 0, 127, 1)',
-          'rgba(63, 0, 91, 1)',
-          'rgba(127, 0, 63, 1)',
-          'rgba(191, 0, 31, 1)',
-          'rgba(255, 0, 0, 1)'
-        ]
-      })
-      setHeatmapLayer(newHeatmap)
-    }
-
-    return () => {
-      if (heatmapLayer) {
-        heatmapLayer.setMap(null)
-      }
-    }
-  }, [map, showHeatmap, catches]) // eslint-disable-line react-hooks/exhaustive-deps
+    // Create heatmap layer
+    const newHeatmap = new google.maps.visualization.HeatmapLayer({
+      data: heatmapData,
+      map: map,
+      radius: 30,
+      opacity: 0.6,
+      gradient: [
+        'rgba(0, 255, 255, 0)',
+        'rgba(0, 255, 255, 1)',
+        'rgba(0, 191, 255, 1)',
+        'rgba(0, 127, 255, 1)',
+        'rgba(0, 63, 255, 1)',
+        'rgba(0, 0, 255, 1)',
+        'rgba(0, 0, 223, 1)',
+        'rgba(0, 0, 191, 1)',
+        'rgba(0, 0, 159, 1)',
+        'rgba(0, 0, 127, 1)',
+        'rgba(63, 0, 91, 1)',
+        'rgba(127, 0, 63, 1)',
+        'rgba(191, 0, 31, 1)',
+        'rgba(255, 0, 0, 1)'
+      ]
+    })
+    setHeatmapLayer(newHeatmap)
+  }, [map, showHeatmap, heatmapLayer, catches])
 
   // Get color based on species category
   const getCategoryColor = (category: string) => {
