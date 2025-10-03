@@ -85,11 +85,11 @@ export default function WeatherForecastView({ darkMode = false, latitude: initia
     }
   }
 
-  const handleMapClick = (event: google.maps.MapMouseEvent) => {
-    if (event.latLng) {
+  const handleMapClick = (event: any) => {
+    if (event.detail?.latLng) {
       setSelectedLocation({
-        lat: event.latLng.lat(),
-        lng: event.latLng.lng()
+        lat: event.detail.latLng.lat,
+        lng: event.detail.latLng.lng
       })
     }
   }
