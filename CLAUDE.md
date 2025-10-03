@@ -48,11 +48,19 @@ fishlog-project/
   - ✅ "Registrera fler här"-funktion
   - ✅ Settings-dropdown med kugghjulsikon
   - ✅ Foto-upload med Supabase Storage
+  - ✅ Lightbox för foto-visning
+  - ✅ Foton i både grid och list view
+  - ✅ Filtrering (art + datumspan)
 
 ### 🚧 Nästa Steg (Fas 5)
-1. **Filtrering** - Filtrera på art och datum
-2. **Statistik** - Totala fångster, största fångst, per art
-3. **Trendgrafer** - Vikt över tid, fångster per månad
+1. **Statistik** - Totala fångster, största fångst, per art
+2. **Trendgrafer** - Vikt över tid, fångster per månad
+
+### 📋 Backlog (Framtida Features)
+- **Fotoalbum** - Separat vy med alla foton, sortera på art/datum
+- **Exportera data** - CSV/JSON export av fångster
+- **Delning** - Dela fångster via länk
+- **Väderprognos** - Integration med vädertjänst för planering
 
 ## Viktiga Tekniska Detaljer
 
