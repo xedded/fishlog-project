@@ -9,6 +9,8 @@ import CatchMap from './CatchMap'
 import AddCatchForm from './AddCatchForm'
 import EditCatchForm from './EditCatchForm'
 import StatisticsView from './StatisticsView'
+import PhotoAlbumView from './PhotoAlbumView'
+import WeatherForecastView from './WeatherForecastView'
 import {
   Sun,
   Moon,
@@ -37,7 +39,9 @@ import {
   Check,
   Filter,
   X,
-  Trophy
+  Trophy,
+  Camera,
+  Cloud
 } from 'lucide-react'
 
 // Convert degrees to compass direction
@@ -56,10 +60,10 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [showAddForm, setShowAddForm] = useState(false)
   const [editingCatch, setEditingCatch] = useState<Catch | null>(null)
-  const [activeTab, setActiveTab] = useState<'catches' | 'statistics' | 'records'>('catches')
+  const [activeTab, setActiveTab] = useState<'catches' | 'statistics' | 'records' | 'photos' | 'weather'>('catches')
 
   // Clear filters when changing tabs
-  const handleTabChange = (tab: 'catches' | 'statistics' | 'records') => {
+  const handleTabChange = (tab: 'catches' | 'statistics' | 'records' | 'photos' | 'weather') => {
     setActiveTab(tab)
     clearFilters()
   }
@@ -615,6 +619,32 @@ export default function Dashboard() {
                   <div className="flex items-center gap-2">
                     <Trophy className="w-5 h-5" />
                     {language === 'en' ? 'Personal Bests' : 'Personliga rekord'}
+                  </div>
+                </button>
+                <button
+                  onClick={() => handleTabChange('photos')}
+                  className={`px-4 py-3 border-b-2 font-medium transition-colors ${
+                    activeTab === 'photos'
+                      ? `${darkMode ? 'border-blue-400 text-blue-400' : 'border-blue-600 text-blue-600'}`
+                      : `border-transparent ${darkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-600 hover:text-gray-900'}`
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <Camera className="w-5 h-5" />
+                    {language === 'en' ? 'Photo Album' : 'Fotoalbum'}
+                  </div>
+                </button>
+                <button
+                  onClick={() => handleTabChange('weather')}
+                  className={`px-4 py-3 border-b-2 font-medium transition-colors ${
+                    activeTab === 'weather'
+                      ? `${darkMode ? 'border-blue-400 text-blue-400' : 'border-blue-600 text-blue-600'}`
+                      : `border-transparent ${darkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-600 hover:text-gray-900'}`
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <Cloud className="w-5 h-5" />
+                    {language === 'en' ? 'Weather Forecast' : 'Väderprognos'}
                   </div>
                 </button>
               </nav>
@@ -1209,9 +1239,15 @@ export default function Dashboard() {
               )}
               <StatisticsView catches={filterCatches(catches)} darkMode={darkMode} />
             </>
-          ) : (
+          ) : activeTab === 'records' ? (
             /* Personal Records Tab */
             <StatisticsView catches={catches} darkMode={darkMode} showOnlyRecords={true} />
+          ) : activeTab === 'photos' ? (
+            /* Photo Album Tab */
+            <PhotoAlbumView catches={catches} darkMode={darkMode} onPhotoClick={setLightboxPhoto} />
+          ) : (
+            /* Weather Forecast Tab */
+            <WeatherForecastView darkMode={darkMode} />
           )}
         </div>
       </main>
