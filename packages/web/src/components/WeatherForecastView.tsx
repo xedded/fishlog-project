@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { Cloud, Wind, Droplets, Eye, Sunrise, Sunset, ThermometerSun, Fish, MapPin } from 'lucide-react'
-import { APIProvider, Map, AdvancedMarker } from '@vis.gl/react-google-maps'
+import { APIProvider, Map, AdvancedMarker, MapMouseEvent } from '@vis.gl/react-google-maps'
 
 interface WeatherForecastViewProps {
   darkMode?: boolean
@@ -85,11 +85,12 @@ export default function WeatherForecastView({ darkMode = false, latitude: initia
     }
   }
 
-  const handleMapClick = (event: { detail?: { latLng?: { lat: number; lng: number } } }) => {
-    if (event.detail?.latLng) {
+  const handleMapClick = (event: MapMouseEvent) => {
+    const latLng = event.detail.latLng
+    if (latLng) {
       setSelectedLocation({
-        lat: event.detail.latLng.lat,
-        lng: event.detail.latLng.lng
+        lat: latLng.lat,
+        lng: latLng.lng
       })
     }
   }
