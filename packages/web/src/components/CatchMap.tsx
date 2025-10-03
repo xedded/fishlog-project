@@ -74,11 +74,19 @@ function MapContent({ catches, onBoundsChange, darkMode, showHeatmap }: { catche
       return
     }
 
-    // Create heatmap data
-    const heatmapData = catches.map(c => ({
+    // Check if visualization library is loaded
+    if (!google.maps.visualization) {
+      console.error('Google Maps Visualization library not loaded')
+      return
+    }
+
+    // Create heatmap data - array of WeightedLocation objects
+    const heatmapData: google.maps.visualization.WeightedLocation[] = catches.map(c => ({
       location: new google.maps.LatLng(c.latitude, c.longitude),
       weight: c.quantity || 1
     }))
+
+    console.log('Heatmap data:', heatmapData)
 
     // Create or update heatmap layer
     if (heatmapLayer) {
@@ -86,6 +94,7 @@ function MapContent({ catches, onBoundsChange, darkMode, showHeatmap }: { catche
     } else {
       const newHeatmap = new google.maps.visualization.HeatmapLayer({
         data: heatmapData,
+        map: map,
         radius: 30,
         opacity: 0.6,
         gradient: [
@@ -105,7 +114,6 @@ function MapContent({ catches, onBoundsChange, darkMode, showHeatmap }: { catche
           'rgba(255, 0, 0, 1)'
         ]
       })
-      newHeatmap.setMap(map)
       setHeatmapLayer(newHeatmap)
     }
 
