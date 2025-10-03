@@ -218,7 +218,8 @@ export default function Dashboard() {
       .select(`
         *,
         species (name_swedish, name_english, name_latin, category),
-        weather_data (temperature, weather_desc, wind_speed, wind_direction, pressure, humidity)
+        weather_data (temperature, weather_desc, wind_speed, wind_direction, pressure, humidity),
+        photos (id, file_path, file_size, mime_type)
       `)
       .eq('user_id', user?.id)
 
@@ -672,6 +673,25 @@ export default function Dashboard() {
                         <div className="flex items-start gap-2">
                           <StickyNote className={`w-4 h-4 mt-0.5 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
                           <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'} italic`}>{catch_item.notes}</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {catch_item.photos && catch_item.photos.length > 0 && (
+                      <div className={`mt-3 pt-3 ${darkMode ? 'border-gray-700' : 'border-gray-200'} border-t`}>
+                        <div className="grid grid-cols-2 gap-2">
+                          {catch_item.photos.map((photo) => {
+                            const publicUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/catch-photos/${photo.file_path}`
+                            return (
+                              <img
+                                key={photo.id}
+                                src={publicUrl}
+                                alt="Catch photo"
+                                className="w-full h-24 object-cover rounded-lg cursor-pointer hover:opacity-75 transition-opacity"
+                                onClick={() => window.open(publicUrl, '_blank')}
+                              />
+                            )
+                          })}
                         </div>
                       </div>
                     )}

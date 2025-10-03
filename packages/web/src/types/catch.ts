@@ -28,4 +28,10 @@ export interface Catch {
     pressure: number
     humidity: number
   }
+  photos?: {
+    id: string
+    file_path: string
+    file_size: number | null
+    mime_type: string | null
+  }[]
 }

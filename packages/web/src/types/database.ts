@@ -52,10 +52,17 @@ export interface DatabaseCatch {
 export interface DatabasePhoto {
   id: string
   catch_id: string
-  file_path: string
+  file_path: string  // Path in Supabase Storage: {user_id}/{catch_id}_{index}.jpg
   file_size: number | null
   mime_type: string | null
   created_at: string
+}
+
+export interface DatabasePhotoInsert {
+  catch_id: string
+  file_path: string
+  file_size?: number | null
+  mime_type?: string | null
 }
 
 export interface DatabaseFavoriteLocation {

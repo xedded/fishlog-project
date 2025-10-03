@@ -28,6 +28,7 @@ export default function AddCatchForm({ onSuccess, onCancel, userId, darkMode = f
   const [userRegion, setUserRegion] = useState<string>('Europe')
   const [loading, setLoading] = useState(false)
   const [useMapPicker, setUseMapPicker] = useState(false)
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([])
   const [formData, setFormData] = useState({
     species_id: '',
     weight: '',
@@ -150,6 +151,31 @@ export default function AddCatchForm({ onSuccess, onCancel, userId, darkMode = f
     return result
   }
 
+  const uploadPhotos = async (catchId: string) => {
+    if (selectedFiles.length === 0) return
+
+    for (const file of selectedFiles) {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('catchId', catchId)
+      formData.append('userId', userId)
+
+      try {
+        const response = await fetch('/api/upload-photo', {
+          method: 'POST',
+          body: formData
+        })
+
+        if (!response.ok) {
+          const error = await response.json()
+          console.error('Photo upload failed:', error)
+        }
+      } catch (error) {
+        console.error('Photo upload error:', error)
+      }
+    }
+  }
+
   const saveCatch = async () => {
     try {
       // 1. Fetch weather data
@@ -196,7 +222,7 @@ export default function AddCatchForm({ onSuccess, onCancel, userId, darkMode = f
       }
 
       // 3. Insert catch with weather_id reference
-      const { error: catchError } = await supabase
+      const { data: catchData, error: catchError } = await supabase
         .from('catches')
         .insert({
           user_id: userId,
@@ -217,6 +243,11 @@ export default function AddCatchForm({ onSuccess, onCancel, userId, darkMode = f
       if (catchError) {
         console.error('Catch insert error:', catchError)
         throw new Error(catchError.message || 'Kunde inte spara fångsten')
+      }
+
+      // 4. Upload photos if any
+      if (catchData && selectedFiles.length > 0) {
+        await uploadPhotos(catchData.id)
       }
 
       onSuccess()
@@ -425,6 +456,36 @@ export default function AddCatchForm({ onSuccess, onCancel, userId, darkMode = f
               />
             </div>
 
+            {/* Foto-upload */}
+            <div>
+              <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
+                Foton 📸
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={(e) => {
+                  const files = Array.from(e.target.files || [])
+                  setSelectedFiles(files)
+                }}
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+              />
+              {selectedFiles.length > 0 && (
+                <div className="mt-2 space-y-1">
+                  {selectedFiles.map((file, index) => (
+                    <div key={index} className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'} flex items-center gap-2`}>
+                      <span>📷 {file.name}</span>
+                      <span className="text-xs">({(file.size / 1024).toFixed(1)} KB)</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <p className={`text-xs mt-1 ${darkMode ? 'text-gray-500' : 'text-gray-600'}`}>
+                Max 5 MB per fil. Flera bilder kan väljas.
+              </p>
+            </div>
+
             {/* Knappar */}
             <div className="flex gap-3 pt-4">
               <button
@@ -443,7 +504,7 @@ export default function AddCatchForm({ onSuccess, onCancel, userId, darkMode = f
                     // Save current catch first
                     await saveCatch()
 
-                    // Reset only species, weight, length, quantity, notes - keep location and time
+                    // Reset only species, weight, length, quantity, notes, photos - keep location and time
                     setFormData(prev => ({
                       ...prev,
                       species_id: '',
@@ -452,6 +513,7 @@ export default function AddCatchForm({ onSuccess, onCancel, userId, darkMode = f
                       quantity: '1',
                       notes: ''
                     }))
+                    setSelectedFiles([])
                   } catch {
                     // Error already handled in saveCatch
                   } finally {
