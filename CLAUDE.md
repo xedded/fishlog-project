@@ -39,7 +39,7 @@ fishlog-project/
 
 ### ✅ KLART
 - **Fas 1-3:** Foundation, Auth, CRUD, Väder, Karta, Demodata
-- **Fas 4 (pågående):**
+- **Fas 4:**
   - ✅ Redigera fångster
   - ✅ Språkstöd (Svenska/Engelska med flaggor 🇸🇪/🇬🇧)
   - ✅ Metric/Imperial enhetssystem
@@ -47,25 +47,33 @@ fishlog-project/
   - ✅ Quantity-fält (antal fångster)
   - ✅ "Registrera fler här"-funktion
   - ✅ Settings-dropdown med kugghjulsikon
+  - ✅ Foto-upload med Supabase Storage
 
-### 🚧 Nästa Steg
-1. **Foto-upload** - Supabase Storage integration
-2. **Filtrering** - Filtrera på art och datum
-3. **Statistik** - Totala fångster, största fångst, per art
-4. **Trendgrafer** - Vikt över tid, fångster per månad
+### 🚧 Nästa Steg (Fas 5)
+1. **Filtrering** - Filtrera på art och datum
+2. **Statistik** - Totala fångster, största fångst, per art
+3. **Trendgrafer** - Vikt över tid, fångster per månad
 
 ## Viktiga Tekniska Detaljer
 
 ### Database Schema
-- `users` - Användarprofiler (auto-skapas vid login)
+- `users` - Användarprofiler (email, profile_name, avatar_url)
 - `species` - 100+ fiskarter (continent, name_english, name_swedish)
 - `catches` - Fångster (weight, length, quantity, latitude, longitude)
 - `weather_data` - Väderdata från Open-Meteo
+- `photos` - Foton kopplade till fångster (file_path, file_size, mime_type)
+
+### Supabase Storage
+- **Bucket:** `catch-photos` (public)
+- **Struktur:** `{user_id}/{catch_id}_{index}.jpg`
+- **Max storlek:** 5 MB per fil
+- **RLS:** Användare kan bara ladda upp/läsa egna foton
 
 ### API Routes
 - `/api/weather` - Hämtar historisk väderdata
 - `/api/geocode` - Reverse geocoding (platsnamn från koordinater)
 - `/api/generate-demo` - Genererar 10 slumpmässiga fångster
+- `/api/upload-photo` - POST: Ladda upp foto, DELETE: Ta bort foto
 
 ### Environment Variables
 **Supabase:**

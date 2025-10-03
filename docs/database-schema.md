@@ -104,3 +104,71 @@ CREATE POLICY "Users can only see own photos" ON photos
     SELECT user_id FROM catches WHERE id = catch_id
   ));
 ```
+
+## Supabase Storage
+
+### Bucket: catch-photos
+
+**Konfiguration:**
+- **Public:** ✅ Ja (för att kunna visa bilderna)
+- **Max file size:** 5 MB
+- **Allowed MIME types:** `image/*`
+
+**Filstruktur:**
+```
+catch-photos/
+├── {user_id_1}/
+│   ├── {catch_id_1}_1.jpg
+│   ├── {catch_id_1}_2.jpg
+│   ├── {catch_id_2}_1.png
+│   └── {catch_id_3}_1.jpg
+├── {user_id_2}/
+│   └── {catch_id_4}_1.jpg
+```
+
+**Storage Policies (RLS):**
+```sql
+-- Användare kan ladda upp egna foton
+CREATE POLICY "Users can upload own photos"
+ON storage.objects
+FOR INSERT
+TO authenticated
+WITH CHECK (
+  bucket_id = 'catch-photos' AND
+  (storage.foldername(name))[1] = auth.uid()::text
+);
+
+-- Användare kan läsa egna foton
+CREATE POLICY "Users can view own photos"
+ON storage.objects
+FOR SELECT
+TO authenticated
+USING (
+  bucket_id = 'catch-photos' AND
+  (storage.foldername(name))[1] = auth.uid()::text
+);
+
+-- Användare kan radera egna foton
+CREATE POLICY "Users can delete own photos"
+ON storage.objects
+FOR DELETE
+TO authenticated
+USING (
+  bucket_id = 'catch-photos' AND
+  (storage.foldername(name))[1] = auth.uid()::text
+);
+
+-- Alla kan läsa publika foton (för delning)
+CREATE POLICY "Anyone can view public photos"
+ON storage.objects
+FOR SELECT
+TO public
+USING (bucket_id = 'catch-photos');
+```
+
+**Public URL Format:**
+```
+https://{project}.supabase.co/storage/v1/object/public/catch-photos/{user_id}/{catch_id}_{index}.jpg
+```
+
+Se [docs/setup/supabase-storage-setup.md](setup/supabase-storage-setup.md) för fullständig setup-guide.
