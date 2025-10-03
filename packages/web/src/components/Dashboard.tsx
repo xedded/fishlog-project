@@ -55,7 +55,8 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [showAddForm, setShowAddForm] = useState(false)
   const [editingCatch, setEditingCatch] = useState<Catch | null>(null)
-  const [viewMode, setViewMode] = useState<'grid' | 'list' | 'statistics'>('grid')
+  const [activeTab, setActiveTab] = useState<'catches' | 'statistics'>('catches')
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [showSettings, setShowSettings] = useState(false)
   const [filterSpecies, setFilterSpecies] = useState<string>('')
   const [filterDateFrom, setFilterDateFrom] = useState<string>('')
@@ -566,73 +567,99 @@ export default function Dashboard() {
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           {/* Karta */}
-          {catches.length > 0 && (
-            <div className="mb-8">
-              <div className="flex items-center gap-2 mb-4">
-                <MapPin className={`w-6 h-6 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`} />
-                <h2 className={`text-xl font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                  {t('catch.location')}
-                </h2>
-              </div>
-              <CatchMap
-                catches={filterCatches(catches)}
-                apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ''}
-                onBoundsChange={setVisibleCatches}
-                darkMode={darkMode}
-              />
-            </div>
-          )}
-
+          {/* Tab Navigation */}
           <div className="mb-6">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-              <div className="flex items-center gap-2">
-                <List className={`w-6 h-6 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`} />
-                <h2 className={`text-xl font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                  {t('dashboard.title')}
-                  <span className={`ml-2 text-sm font-normal ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                    ({visibleCatches.length > 0 ? visibleCatches.length : catches.length})
-                  </span>
-                </h2>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {/* View toggle */}
-                {catches.length > 0 && (
-                  <div className={`flex ${darkMode ? 'bg-gray-700' : 'bg-gray-200'} rounded-lg p-1`}>
-                    <button
-                      onClick={() => setViewMode('grid')}
-                      className={`p-2 rounded-md transition-colors ${
-                        viewMode === 'grid'
-                          ? `${darkMode ? 'bg-gray-600 text-white' : 'bg-white text-gray-900'} shadow`
-                          : `${darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`
-                      }`}
-                      title={t('dashboard.viewGrid')}
-                    >
-                      <Grid3x3 className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => setViewMode('list')}
-                      className={`p-2 rounded-md transition-colors ${
-                        viewMode === 'list'
-                          ? `${darkMode ? 'bg-gray-600 text-white' : 'bg-white text-gray-900'} shadow`
-                          : `${darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`
-                      }`}
-                      title={t('dashboard.viewList')}
-                    >
-                      <List className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => setViewMode('statistics')}
-                      className={`p-2 rounded-md transition-colors ${
-                        viewMode === 'statistics'
-                          ? `${darkMode ? 'bg-gray-600 text-white' : 'bg-white text-gray-900'} shadow`
-                          : `${darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`
-                      }`}
-                      title={language === 'en' ? 'Statistics view' : 'Statistikvy'}
-                    >
-                      <BarChart3 className="w-4 h-4" />
-                    </button>
+            <div className={`border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+              <nav className="flex gap-4">
+                <button
+                  onClick={() => setActiveTab('catches')}
+                  className={`px-4 py-3 border-b-2 font-medium transition-colors ${
+                    activeTab === 'catches'
+                      ? `${darkMode ? 'border-blue-400 text-blue-400' : 'border-blue-600 text-blue-600'}`
+                      : `border-transparent ${darkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-600 hover:text-gray-900'}`
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <List className="w-5 h-5" />
+                    {language === 'en' ? 'My Catches' : 'Mina fångster'}
                   </div>
-                )}
+                </button>
+                <button
+                  onClick={() => setActiveTab('statistics')}
+                  className={`px-4 py-3 border-b-2 font-medium transition-colors ${
+                    activeTab === 'statistics'
+                      ? `${darkMode ? 'border-blue-400 text-blue-400' : 'border-blue-600 text-blue-600'}`
+                      : `border-transparent ${darkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-600 hover:text-gray-900'}`
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <BarChart3 className="w-5 h-5" />
+                    {language === 'en' ? 'Statistics' : 'Statistik'}
+                  </div>
+                </button>
+              </nav>
+            </div>
+          </div>
+
+          {activeTab === 'catches' ? (
+            <>
+              {/* Map Section */}
+              {catches.length > 0 && (
+                <div className="mb-8">
+                  <div className="flex items-center gap-2 mb-4">
+                    <MapPin className={`w-6 h-6 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`} />
+                    <h2 className={`text-xl font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                      {t('catch.location')}
+                    </h2>
+                  </div>
+                  <CatchMap
+                    catches={filterCatches(catches)}
+                    apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ''}
+                    onBoundsChange={setVisibleCatches}
+                    darkMode={darkMode}
+                  />
+                </div>
+              )}
+
+              {/* Catches Section */}
+              <div className="mb-6">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                  <div className="flex items-center gap-2">
+                    <h2 className={`text-xl font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                      {t('dashboard.title')}
+                      <span className={`ml-2 text-sm font-normal ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                        ({visibleCatches.length > 0 ? visibleCatches.length : catches.length})
+                      </span>
+                    </h2>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {/* View toggle */}
+                    {catches.length > 0 && (
+                      <div className={`flex ${darkMode ? 'bg-gray-700' : 'bg-gray-200'} rounded-lg p-1`}>
+                        <button
+                          onClick={() => setViewMode('grid')}
+                          className={`p-2 rounded-md transition-colors ${
+                            viewMode === 'grid'
+                              ? `${darkMode ? 'bg-gray-600 text-white' : 'bg-white text-gray-900'} shadow`
+                              : `${darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`
+                          }`}
+                          title={t('dashboard.viewGrid')}
+                        >
+                          <Grid3x3 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => setViewMode('list')}
+                          className={`p-2 rounded-md transition-colors ${
+                            viewMode === 'list'
+                              ? `${darkMode ? 'bg-gray-600 text-white' : 'bg-white text-gray-900'} shadow`
+                              : `${darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`
+                          }`}
+                          title={t('dashboard.viewList')}
+                        >
+                          <List className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
                 <button
                   onClick={handleGenerateDemo}
                   disabled={loading}
@@ -740,9 +767,7 @@ export default function Dashboard() {
               </div>
             )}
 
-            {viewMode === 'statistics' ? (
-              <StatisticsView catches={catches} darkMode={darkMode} />
-            ) : catches.length === 0 ? (
+            {catches.length === 0 ? (
               <div className="text-center py-12">
                 <p className={`${darkMode ? 'text-gray-400' : 'text-gray-500'} text-lg`}>{t('dashboard.noCatches')}</p>
                 <p className={`${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>{t('dashboard.noCatchesDesc')}</p>
@@ -1074,7 +1099,12 @@ export default function Dashboard() {
                 </table>
               </div>
             )}
-          </div>
+              </div>
+            </>
+          ) : (
+            /* Statistics Tab */
+            <StatisticsView catches={catches} darkMode={darkMode} />
+          )}
         </div>
       </main>
 
