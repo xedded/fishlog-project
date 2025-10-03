@@ -113,14 +113,20 @@ export async function GET(request: NextRequest) {
       return codes[code] || 'Okänt väder'
     }
 
+    // Convert wind speed from km/h to m/s (Open-Meteo returns km/h by default)
+    const windSpeedKmh = hourly.windspeed_10m[closestIndex]
+    const windSpeedMs = windSpeedKmh / 3.6
+    const windGustsKmh = hourly.windgusts_10m?.[closestIndex]
+    const windGustsMs = windGustsKmh ? windGustsKmh / 3.6 : null
+
     return NextResponse.json({
       temperature: Math.round(hourly.temperature_2m[closestIndex]),
       weather_desc: weatherCodeToDesc(hourly.weathercode[closestIndex]),
       pressure: Math.round(hourly.pressure_msl[closestIndex]),
       humidity: Math.round(hourly.relativehumidity_2m[closestIndex]),
-      wind_speed: Math.round(hourly.windspeed_10m[closestIndex] * 10) / 10,
+      wind_speed: Math.round(windSpeedMs * 10) / 10,
       wind_direction: Math.round(hourly.winddirection_10m[closestIndex]),
-      wind_gusts: hourly.windgusts_10m?.[closestIndex] ? Math.round(hourly.windgusts_10m[closestIndex] * 10) / 10 : null
+      wind_gusts: windGustsMs ? Math.round(windGustsMs * 10) / 10 : null
     })
   } catch (error) {
     console.error('Weather API error:', error)

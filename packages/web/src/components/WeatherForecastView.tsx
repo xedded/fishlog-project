@@ -62,13 +62,14 @@ export default function WeatherForecastView({ darkMode = false, latitude: initia
       const data = await response.json()
 
       if (data.daily) {
+        // Convert wind speeds from km/h to m/s (Open-Meteo returns km/h by default)
         const forecastData: ForecastDay[] = data.daily.time.map((date: string, index: number) => ({
           date,
           maxTemp: data.daily.temperature_2m_max[index],
           minTemp: data.daily.temperature_2m_min[index],
           precipitation: data.daily.precipitation_sum[index],
-          windSpeed: data.daily.wind_speed_10m_mean[index],
-          windGusts: data.daily.wind_gusts_10m_max[index],
+          windSpeed: data.daily.wind_speed_10m_mean[index] / 3.6, // Convert km/h to m/s
+          windGusts: data.daily.wind_gusts_10m_max[index] / 3.6, // Convert km/h to m/s
           windDirection: data.daily.winddirection_10m_dominant[index],
           weatherCode: data.daily.weathercode[index],
           sunrise: data.daily.sunrise[index],
