@@ -380,6 +380,12 @@ export default function StatisticsView({ catches, darkMode = false, showOnlyReco
                 contentStyle={{
                   backgroundColor: darkMode ? '#1f2937' : '#ffffff',
                   border: `1px solid ${darkMode ? '#374151' : '#e5e7eb'}`,
+                  borderRadius: '0.375rem'
+                }}
+                itemStyle={{
+                  color: darkMode ? '#ffffff' : '#000000'
+                }}
+                labelStyle={{
                   color: darkMode ? '#ffffff' : '#000000'
                 }}
               />
