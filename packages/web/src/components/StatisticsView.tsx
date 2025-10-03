@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react'
 import { Catch } from '@/types/catch'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { Fish, TrendingUp, Award, Hash } from 'lucide-react'
+import { Fish, TrendingUp, Award, Hash, MapPin, CloudRain, Clock, Trophy } from 'lucide-react'
+import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 
 interface StatisticsViewProps {
   catches: Catch[]
@@ -25,7 +26,7 @@ export default function StatisticsView({ catches, darkMode = false }: Statistics
   const convertWeight = (kg: number | null) => {
     if (!kg) return null
     if (unitSystem === 'imperial') {
-      return (kg * 2.20462).toFixed(2) // Convert to pounds
+      return (kg * 2.20462).toFixed(2)
     }
     return kg.toFixed(2)
   }
@@ -60,7 +61,8 @@ export default function StatisticsView({ catches, darkMode = false }: Statistics
         count: 0,
         totalWeight: 0,
         biggestWeight: 0,
-        longestLength: 0
+        longestLength: 0,
+        speciesId: speciesId
       }
     }
 
@@ -81,11 +83,101 @@ export default function StatisticsView({ catches, darkMode = false }: Statistics
     totalWeight: number
     biggestWeight: number
     longestLength: number
+    speciesId: string
   }>)
 
   // Sort species by count (most caught first)
-  const sortedSpecies = Object.values(speciesStats)
+  const sortedSpecies = Object.values(speciesStats).sort((a, b) => b.count - a.count)
+
+  // PB Lista (Personal Bests)
+  const personalBests = sortedSpecies.map(species => ({
+    name: species.name,
+    weight: species.biggestWeight,
+    length: species.longestLength
+  })).filter(pb => pb.weight > 0 || pb.length > 0)
+
+  // Catches over time (monthly)
+  const catchesByMonth = catches.reduce((acc, catchItem) => {
+    const date = new Date(catchItem.caught_at)
+    const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+
+    if (!acc[monthKey]) {
+      acc[monthKey] = { month: monthKey, count: 0, totalWeight: 0 }
+    }
+
+    acc[monthKey].count += catchItem.quantity || 1
+    if (catchItem.weight) {
+      acc[monthKey].totalWeight += catchItem.weight
+    }
+
+    return acc
+  }, {} as Record<string, { month: string; count: number; totalWeight: number }>)
+
+  const monthlyData = Object.values(catchesByMonth)
+    .sort((a, b) => a.month.localeCompare(b.month))
+    .map(d => ({
+      month: d.month,
+      count: d.count,
+      avgWeight: d.totalWeight / d.count
+    }))
+
+  // Catches by location
+  const catchesByLocation = catches.reduce((acc, catchItem) => {
+    const location = catchItem.location_name
+    if (!acc[location]) {
+      acc[location] = 0
+    }
+    acc[location] += catchItem.quantity || 1
+    return acc
+  }, {} as Record<string, number>)
+
+  const topLocations = Object.entries(catchesByLocation)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 10)
+    .map(([name, count]) => ({ name, count }))
+
+  // Weather correlation
+  const weatherStats = catches
+    .filter(c => c.weather_data)
+    .reduce((acc, catchItem) => {
+      const temp = catchItem.weather_data?.temperature
+      const desc = catchItem.weather_data?.weather_desc || 'unknown'
+
+      if (!acc[desc]) {
+        acc[desc] = { count: 0, totalTemp: 0 }
+      }
+
+      acc[desc].count += catchItem.quantity || 1
+      if (temp) acc[desc].totalTemp += temp
+
+      return acc
+    }, {} as Record<string, { count: number; totalTemp: number }>)
+
+  const weatherData = Object.entries(weatherStats)
+    .map(([condition, data]) => ({
+      condition,
+      count: data.count,
+      avgTemp: data.totalTemp / data.count
+    }))
     .sort((a, b) => b.count - a.count)
+
+  // Time patterns (hour of day)
+  const catchesByHour = catches.reduce((acc, catchItem) => {
+    const hour = new Date(catchItem.caught_at).getHours()
+    if (!acc[hour]) {
+      acc[hour] = 0
+    }
+    acc[hour] += catchItem.quantity || 1
+    return acc
+  }, {} as Record<number, number>)
+
+  const hourlyData = Array.from({ length: 24 }, (_, i) => ({
+    hour: `${i}:00`,
+    count: catchesByHour[i] || 0
+  }))
+
+  // Pie chart colors
+  const COLORS = ['#3b82f6', '#8b5cf6', '#ef4444', '#f59e0b', '#10b981', '#ec4899', '#06b6d4', '#f97316']
 
   if (catches.length === 0) {
     return (
@@ -100,9 +192,8 @@ export default function StatisticsView({ catches, darkMode = false }: Statistics
 
   return (
     <div className="space-y-6">
-      {/* Overall Statistics */}
+      {/* Overall Statistics Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Total Catches */}
         <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-md p-6`}>
           <div className="flex items-center justify-between mb-2">
             <h3 className={`text-sm font-medium ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
@@ -115,7 +206,6 @@ export default function StatisticsView({ catches, darkMode = false }: Statistics
           </p>
         </div>
 
-        {/* Species Count */}
         <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-md p-6`}>
           <div className="flex items-center justify-between mb-2">
             <h3 className={`text-sm font-medium ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
@@ -128,7 +218,6 @@ export default function StatisticsView({ catches, darkMode = false }: Statistics
           </p>
         </div>
 
-        {/* Biggest Catch */}
         <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-md p-6`}>
           <div className="flex items-center justify-between mb-2">
             <h3 className={`text-sm font-medium ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
@@ -152,7 +241,6 @@ export default function StatisticsView({ catches, darkMode = false }: Statistics
           )}
         </div>
 
-        {/* Longest Catch */}
         <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-md p-6`}>
           <div className="flex items-center justify-between mb-2">
             <h3 className={`text-sm font-medium ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
@@ -177,7 +265,172 @@ export default function StatisticsView({ catches, darkMode = false }: Statistics
         </div>
       </div>
 
-      {/* Per Species Statistics */}
+      {/* Charts Row 1: Catches over time + Species distribution */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Catches Over Time */}
+        <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-md p-6`}>
+          <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'} mb-4`}>
+            {language === 'en' ? 'Catches Over Time' : 'Fångster över tid'}
+          </h3>
+          <ResponsiveContainer width="100%" height={250}>
+            <LineChart data={monthlyData}>
+              <CartesianGrid strokeDasharray="3 3" stroke={darkMode ? '#374151' : '#e5e7eb'} />
+              <XAxis dataKey="month" stroke={darkMode ? '#9ca3af' : '#6b7280'} />
+              <YAxis stroke={darkMode ? '#9ca3af' : '#6b7280'} />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: darkMode ? '#1f2937' : '#ffffff',
+                  border: `1px solid ${darkMode ? '#374151' : '#e5e7eb'}`,
+                  color: darkMode ? '#ffffff' : '#000000'
+                }}
+              />
+              <Legend />
+              <Line type="monotone" dataKey="count" stroke="#3b82f6" strokeWidth={2} name={language === 'en' ? 'Catches' : 'Fångster'} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Species Distribution */}
+        <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-md p-6`}>
+          <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'} mb-4`}>
+            {language === 'en' ? 'Species Distribution' : 'Artfördelning'}
+          </h3>
+          <ResponsiveContainer width="100%" height={250}>
+            <PieChart>
+              <Pie
+                data={sortedSpecies.slice(0, 8)}
+                dataKey="count"
+                nameKey="name"
+                cx="50%"
+                cy="50%"
+                outerRadius={80}
+                label
+              >
+                {sortedSpecies.slice(0, 8).map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: darkMode ? '#1f2937' : '#ffffff',
+                  border: `1px solid ${darkMode ? '#374151' : '#e5e7eb'}`
+                }}
+              />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      {/* Charts Row 2: Top Locations + Time of Day */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Top Locations */}
+        <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-md p-6`}>
+          <div className="flex items-center gap-2 mb-4">
+            <MapPin className={`w-5 h-5 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`} />
+            <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+              {language === 'en' ? 'Top Locations' : 'Bästa platserna'}
+            </h3>
+          </div>
+          <ResponsiveContainer width="100%" height={250}>
+            <BarChart data={topLocations} layout="vertical">
+              <CartesianGrid strokeDasharray="3 3" stroke={darkMode ? '#374151' : '#e5e7eb'} />
+              <XAxis type="number" stroke={darkMode ? '#9ca3af' : '#6b7280'} />
+              <YAxis dataKey="name" type="category" width={100} stroke={darkMode ? '#9ca3af' : '#6b7280'} />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: darkMode ? '#1f2937' : '#ffffff',
+                  border: `1px solid ${darkMode ? '#374151' : '#e5e7eb'}`
+                }}
+              />
+              <Bar dataKey="count" fill="#10b981" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Time of Day Pattern */}
+        <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-md p-6`}>
+          <div className="flex items-center gap-2 mb-4">
+            <Clock className={`w-5 h-5 ${darkMode ? 'text-purple-400' : 'text-purple-600'}`} />
+            <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+              {language === 'en' ? 'Best Time of Day' : 'Bästa tid på dygnet'}
+            </h3>
+          </div>
+          <ResponsiveContainer width="100%" height={250}>
+            <BarChart data={hourlyData}>
+              <CartesianGrid strokeDasharray="3 3" stroke={darkMode ? '#374151' : '#e5e7eb'} />
+              <XAxis dataKey="hour" stroke={darkMode ? '#9ca3af' : '#6b7280'} />
+              <YAxis stroke={darkMode ? '#9ca3af' : '#6b7280'} />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: darkMode ? '#1f2937' : '#ffffff',
+                  border: `1px solid ${darkMode ? '#374151' : '#e5e7eb'}`
+                }}
+              />
+              <Bar dataKey="count" fill="#8b5cf6" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      {/* Weather Correlation */}
+      {weatherData.length > 0 && (
+        <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-md p-6`}>
+          <div className="flex items-center gap-2 mb-4">
+            <CloudRain className={`w-5 h-5 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`} />
+            <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+              {language === 'en' ? 'Weather Conditions' : 'Väderförhållanden'}
+            </h3>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {weatherData.slice(0, 4).map((weather, index) => (
+              <div key={index} className={`${darkMode ? 'bg-gray-700' : 'bg-gray-50'} rounded-lg p-4`}>
+                <p className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                  {weather.count}
+                </p>
+                <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'} mt-1 capitalize`}>
+                  {weather.condition}
+                </p>
+                <p className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-500'} mt-1`}>
+                  {weather.avgTemp.toFixed(1)}°C avg
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Personal Bests (PB) */}
+      <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-md p-6`}>
+        <div className="flex items-center gap-2 mb-4">
+          <Trophy className={`w-5 h-5 ${darkMode ? 'text-yellow-400' : 'text-yellow-600'}`} />
+          <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+            {language === 'en' ? 'Personal Bests' : 'Personliga rekord'}
+          </h3>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {personalBests.map((pb, index) => (
+            <div key={index} className={`${darkMode ? 'bg-gray-700' : 'bg-gray-50'} rounded-lg p-4`}>
+              <h4 className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                {pb.name}
+              </h4>
+              <div className="mt-2 space-y-1">
+                {pb.weight > 0 && (
+                  <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    {language === 'en' ? 'Weight:' : 'Vikt:'} <span className="font-semibold">{convertWeight(pb.weight)} {weightUnit}</span>
+                  </p>
+                )}
+                {pb.length > 0 && (
+                  <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    {language === 'en' ? 'Length:' : 'Längd:'} <span className="font-semibold">{pb.length} cm</span>
+                  </p>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Per Species Table */}
       <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-md overflow-hidden`}>
         <div className="p-6 border-b border-gray-700">
           <h2 className={`text-xl font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
