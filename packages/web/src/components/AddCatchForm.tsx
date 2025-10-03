@@ -167,8 +167,18 @@ export default function AddCatchForm({ onSuccess, onCancel, userId, darkMode = f
         })
 
         if (!response.ok) {
-          const error = await response.json()
-          console.error('Photo upload failed:', error)
+          const errorText = await response.text()
+          console.error('Photo upload failed:', response.status, errorText)
+          // Try to parse as JSON if possible
+          try {
+            const errorJson = JSON.parse(errorText)
+            console.error('Error details:', errorJson)
+          } catch {
+            console.error('Non-JSON error:', errorText)
+          }
+        } else {
+          const result = await response.json()
+          console.log('Photo uploaded successfully:', result.photo.id)
         }
       } catch (error) {
         console.error('Photo upload error:', error)

@@ -58,6 +58,7 @@ export default function Dashboard() {
   const [filterSpecies, setFilterSpecies] = useState<string>('')
   const [filterDateFrom, setFilterDateFrom] = useState<string>('')
   const [filterDateTo, setFilterDateTo] = useState<string>('')
+  const [lightboxPhoto, setLightboxPhoto] = useState<string | null>(null)
   const [darkMode, setDarkMode] = useState(() => {
     // Initialize from localStorage or default to true
     if (typeof window !== 'undefined') {
@@ -825,7 +826,7 @@ export default function Dashboard() {
                                 src={publicUrl}
                                 alt="Catch photo"
                                 className="w-full h-24 object-cover rounded-lg cursor-pointer hover:opacity-75 transition-opacity"
-                                onClick={() => window.open(publicUrl, '_blank')}
+                                onClick={() => setLightboxPhoto(publicUrl)}
                               />
                             )
                           })}
@@ -983,6 +984,30 @@ export default function Dashboard() {
                                         <div>
                                           <h4 className={`font-semibold text-sm mb-1 ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>{t('catch.notes')}</h4>
                                           <p className={`text-sm italic ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>{catch_item.notes}</p>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
+                                  {catch_item.photos && catch_item.photos.length > 0 && (
+                                    <div className={`p-3 sm:p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-white'}`}>
+                                      <h4 className={`font-semibold text-sm mb-3 ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Foton</h4>
+                                      <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                                        {catch_item.photos.map((photo) => {
+                                          const publicUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/catch-photos/${photo.file_path}`
+                                          return (
+                                            <img
+                                              key={photo.id}
+                                              src={publicUrl}
+                                              alt="Catch photo"
+                                              className="w-full h-20 sm:h-24 object-cover rounded-lg cursor-pointer hover:opacity-75 transition-opacity"
+                                              onClick={(e) => {
+                                                e.stopPropagation()
+                                                setLightboxPhoto(publicUrl)
+                                              }}
+                                            />
+                                          )
+                                        })}
+                                      </div>
                                         </div>
                                       </div>
                                     </div>
